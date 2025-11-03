@@ -1,33 +1,31 @@
 import HomeIcon from "@mui/icons-material/Home";
-import InfoIcon from "@mui/icons-material/Info";
-import SettingsIcon from "@mui/icons-material/Settings";
+import EventIcon from "@mui/icons-material/Event";
+import SearchIcon from "@mui/icons-material/Search";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
 export const sidepanelitems = [
   {
     id: 0,
     icon: <HomeIcon />,
     label: "Home",
-    onClick: () => {
-      // Navegación a Home
-      console.log("Navigate to Home");
-    },
+    path: "/",
   },
   {
     id: 1,
-    icon: <InfoIcon />,
-    label: "About",
-    onClick: () => {
-      // Navegación a About
-      console.log("Navigate to About");
-    },
+    icon: <EventIcon />,
+    label: "Astronomical Events",
+    path: "/astro-events",
   },
   {
     id: 2,
-    icon: <SettingsIcon />,
-    label: "Settings",
-    onClick: () => {
-      // Navegación a Settings
-      console.log("Navigate to Settings");
-    },
+    icon: <SearchIcon />,
+    label: "Next Sun Eclipse",
+    path: "/next-eclipse",
+  },
+  {
+    id: 3,
+    icon: <PeopleAltIcon />,
+    label: "Visit Other Profiles",
+    path: "/other-profiles",
   },
 ];
