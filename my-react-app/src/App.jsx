@@ -16,10 +16,25 @@ function App() {
         <MenuPanel />
         <Toolbar />
 
-        <Box sx={{ display: "flex", flexGrow: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexGrow: 1,
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
           <SidePanel />
 
-          <Box sx={{ flexGrow: 1, padding: 3 }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              minHeight: 0,
+            }}
+          >
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/other-profiles" element={<OtherProfiles />} />
