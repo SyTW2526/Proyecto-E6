@@ -13,8 +13,23 @@ import { Fragment } from "react";
 import SendIcon from "@mui/icons-material/Send";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+
 function SidePanel() {
   const drawerWidth = 220;
+  const [isHelpDialogOpen, setIsHelpDialogOpen] = React.useState(false);
+
+  const handleHelpClick = () => {
+    setIsHelpDialogOpen(true);
+  };
+
+  const handleCloseHelpDialog = () => {
+    setIsHelpDialogOpen(false);
+  };
   return (
     <Drawer
       sx={{
@@ -46,6 +61,10 @@ function SidePanel() {
                     color: "rgb(240,240,240)",
                     textTransform: "none",
                     width: "100%",
+                    "&:hover": {
+                      backgroundColor: "rgb(70, 70, 70)",
+                      color: "#ffffff",
+                    },
                   }}
                   startIcon={item.icon}
                   fullWidth
@@ -70,8 +89,12 @@ function SidePanel() {
           startIcon={<SendIcon />}
           sx={{
             justifyContent: "flex-start",
-            color: "gray",
+            color: "#bdbdbd",
             textTransform: "none",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              color: "#ffffff",
+            },
           }}
         >
           Report bug
@@ -80,13 +103,47 @@ function SidePanel() {
           startIcon={<HelpOutlineIcon />}
           sx={{
             justifyContent: "flex-start",
-            color: "gray",
+            color: "#bdbdbd",
             textTransform: "none",
+            "&:hover": {
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              color: "#ffffff",
+            },
           }}
+          onClick={handleHelpClick}
         >
           Help
         </Button>
       </Stack>
+
+      {/* Diálogo de ayuda */}
+      <Dialog
+        open={isHelpDialogOpen}
+        keepMounted
+        onClose={handleCloseHelpDialog}
+        aria-describedby="help-dialog-description"
+      >
+        <DialogTitle>{"How to use the app?"}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="help-dialog-description">
+            {`Lunar Phases Visualizer is an app to check real-time positions of the Moon and the Sun.
+            The following picture shows the sections of the UI:\n
+            The navigator will ask for permission to access your geographical coordinates. Click accept.
+            Do not worry if there is any problem while accessing the data, you can modify it from the
+            side panel at any time!`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCloseHelpDialog}
+            autoFocus
+            variant="text"
+            sx={{ fontWeight: "bold", color: "primary.main" }}
+          >
+            CLOSE
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 }
