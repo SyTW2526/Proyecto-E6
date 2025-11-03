@@ -27,17 +27,20 @@ import EditIcon from "@mui/icons-material/Edit";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import LogoutIcon from "@mui/icons-material/Logout";
 
+import { useNavigate } from "react-router-dom";
+
 const drawerWidth = 240;
 const navItems = [{ text: "GitHub", icon: <GitHubIcon /> }];
 
 const handleGitHubClick = () => {
   if (typeof window !== "undefined") {
-    window.location.href = "https://github.com/tuUsuario";
+    window.open("https://github.com/SyTW2526/Proyecto-E6.git");
   }
 };
 
 function DrawerAppBar(props) {
   const { window } = props;
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const openUserMenu = Boolean(anchorEl);
@@ -55,15 +58,13 @@ function DrawerAppBar(props) {
   };
 
   const handleUserAction = (action) => {
-    console.log(`User action: ${action}`);
     handleUserMenuClose();
-    // Aquí puedes añadir la lógica para cada acción
     switch (action) {
       case "edit-profile":
-        // Lógica para editar perfil
+        navigate("/edit-user");
         break;
       case "gallery":
-        // Lógica para ir a galería
+        navigate("/gallery");
         break;
       case "logout":
         // Lógica para cerrar sesión
@@ -116,20 +117,39 @@ function DrawerAppBar(props) {
             >
               <MenuIcon />
             </IconButton>
-            <MoonIcon sx={{ mr: 1, display: { xs: "none", sm: "block" } }} />
-            <Typography
-              variant="h6"
-              component="div"
+            <Box
               sx={{
                 flexGrow: 1,
-                display: { xs: "none", sm: "block" },
-                fontWeight: 600,
-                letterSpacing: "0.5px",
-                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                display: { xs: "none", sm: "flex" },
+                alignItems: "center",
+                gap: 0.8,
               }}
             >
-              Lunar Phases Visualizer
-            </Typography>
+              <MoonIcon
+                sx={{
+                  fontSize: "1.8rem",
+                }}
+              />
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  fontWeight: 500,
+                  letterSpacing: "1px",
+                  fontFamily:
+                    '"Segoe UI", "Roboto", "Helvetica Neue", sans-serif',
+                  fontSize: "1.35rem",
+                  textTransform: "capitalize",
+                  background:
+                    "linear-gradient(45deg, #ffffff 30%, #e3f2fd 90%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                Artemis Visualizer
+              </Typography>
+            </Box>
             <Box sx={{ display: { xs: "none", sm: "block" } }}>
               {navItems.map((item) => (
                 <Button
@@ -213,5 +233,4 @@ DrawerAppBar.propTypes = {
    */
   window: PropTypes.func,
 };
-
 export default DrawerAppBar;

@@ -8,36 +8,24 @@ export const sidepanelitems = [
     id: 0,
     icon: <HomeIcon />,
     label: "Home",
-    onClick: () => {
-      // Navegación a Home
-      console.log("Navigate to Home");
-    },
+    path: "/",
   },
   {
     id: 1,
     icon: <EventIcon />,
     label: "Astronomical Events",
-    onClick: () => {
-      // Navegación a About
-      console.log("Navigate to About");
-    },
+    path: "/astro-events",
   },
   {
     id: 2,
     icon: <SearchIcon />,
     label: "Next Sun Eclipse",
-    onClick: () => {
-      // Navegación a Settings
-      console.log("Navigate to Settings");
-    },
+    path: "/next-eclipse",
   },
   {
     id: 3,
     icon: <PeopleAltIcon />,
     label: "Visit Other Profiles",
-    onClick: () => {
-      // Navegación a Settings
-      console.log("Navigate to Settings");
-    },
+    path: "/other-profiles",
   },
 ];
