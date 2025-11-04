@@ -1,3 +1,4 @@
+import { useAppContext } from '../AppContext';
 import { Box, Typography } from "@mui/material";
 import AddImageButton from "../components/images/add-image-button/AddImageButton";
 import AddImageDialog from "../components/images/add-image-dialog/AddImageDialog";
