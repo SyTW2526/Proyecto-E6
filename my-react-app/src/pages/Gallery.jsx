@@ -1,3 +1,5 @@
+import { useAppContext } from '../AppContext';
+
 function Gallery() {
   return (
     <div>
