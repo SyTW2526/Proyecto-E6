@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material";
-import AddImageButton from "../components/add-image-button/AddImageButton";
-import AddImageDialog from "../components/add-image-dialog/AddImageDialog";
-import ImageGrid from "../components/image-grid/ImageGrid";
+import AddImageButton from "../components/images/add-image-button/AddImageButton";
+import AddImageDialog from "../components/images/add-image-dialog/AddImageDialog";
+import ImageGrid from "../components/images/image-grid/ImageGrid";
 import { useState } from "react";
 
 function Gallery() {
