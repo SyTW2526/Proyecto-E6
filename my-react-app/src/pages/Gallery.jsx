@@ -3,22 +3,12 @@ import { Box, Typography } from "@mui/material";
 import AddImageButton from "../components/images/add-image-button/AddImageButton";
 import AddImageDialog from "../components/images/add-image-dialog/AddImageDialog";
 import ImageGrid from "../components/images/image-grid/ImageGrid";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Photo } from "../models/Photo";
 
 function Gallery() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [photos, setPhotos] = useState([]); // Ahora usamos Photo objects
-
-  // Cargar photos desde localStorage al iniciar
-  useEffect(() => {
-    const savedPhotos = localStorage.getItem('gallery-photos');
-    if (savedPhotos) {
-      const photosData = JSON.parse(savedPhotos);
-      const photoObjects = photosData.map(data => Photo.fromServerData(data));
-      setPhotos(photoObjects);
-    }
-  }, []);
 
   const handleAddClick = () => {
     setIsDialogOpen(true);
@@ -36,21 +26,11 @@ function Gallery() {
     const updatedPhotos = [...photos, newPhoto];
     setPhotos(updatedPhotos);
     console.log("Photo añadida:", newPhoto);
-    
-    // Guardar en localStorage
-    savePhotosToLocalStorage(updatedPhotos);
   };
 
   const handleDeletePhoto = (photoId) => {
     const updatedPhotos = photos.filter(photo => photo.id !== photoId);
     setPhotos(updatedPhotos);
-    savePhotosToLocalStorage(updatedPhotos);
-  };
-
-  // Guardar en localStorage
-  const savePhotosToLocalStorage = (photosArray) => {
-    const photosJSON = photosArray.map(photo => photo.toJSON());
-    localStorage.setItem('gallery-photos', JSON.stringify(photosJSON));
   };
 
   // Convertir Photo objects a formato completo para ImageGrid
@@ -69,14 +49,25 @@ function Gallery() {
 
   return (
     <Box>
-      <Typography variant="h3" gutterBottom>
-        My gallery
+      <Typography 
+        variant="h3" 
+        gutterBottom 
+        sx={{ 
+          textAlign: 'center',
+          color: 'primary.main',
+          fontWeight: 600,
+          mb: 4
+        }}
+      >
+        My Gallery
       </Typography>
 
-      <ImageGrid 
-        images={imagesForGrid} 
-        onDelete={handleDeletePhoto}
-      />
+      <Box sx={{ mx: 2 }}>
+        <ImageGrid 
+          images={imagesForGrid} 
+          onDelete={handleDeletePhoto}
+        />
+      </Box>
 
       <AddImageButton onClick={handleAddClick} />
       <AddImageDialog 
