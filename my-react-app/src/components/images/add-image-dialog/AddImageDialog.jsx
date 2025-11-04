@@ -1,19 +1,34 @@
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Box } from "@mui/material";
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button, Box, TextField, Grid } from "@mui/material";
 import { useState } from "react";
-import TextField from "@mui/material/TextField";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 function AddImageDialog({ open, onClose, onConfirm }) {
+  // Estados básicos
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [captureDate, setCaptureDate] = useState(""); 
+
+  // Estados de metadata de cámara
+  const [camera, setCamera] = useState("");
+  const [lens, setLens] = useState("");
+  const [iso, setIso] = useState("");
+  const [exposure, setExposure] = useState("");
+  const [aperture, setAperture] = useState("");
+
+  // Estados astronómicos
+  const [moonPhase, setMoonPhase] = useState("");
+  
+  // Estados de ubicación
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [locationName, setLocationName] = useState("");
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
       setSelectedFile(file);
-      // Crear URL de preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
@@ -28,37 +43,53 @@ function AddImageDialog({ open, onClose, onConfirm }) {
       return;
     }
     
-    onConfirm({ 
-      title, 
-      description, 
-      file: selectedFile,
-      preview: previewUrl 
-    });
+    // Preparar los datos completos
+    const imageData = { title, description, file: selectedFile, preview: previewUrl,
+                        metadata: { camera, lens, iso, exposure, aperture },
+      moonPhase: moonPhase ? parseFloat(moonPhase) / 100 : null,
+      location: (latitude && longitude) ? {
+        lat: parseFloat(latitude), lng: parseFloat(longitude), name: locationName
+      } : null,
+      date: captureDate
+    };
+    
+    onConfirm(imageData);
     
     // Limpiar todos los estados
-    setTitle("");
-    setDescription("");
-    setSelectedFile(null);
-    setPreviewUrl(null);
+    resetForm();
     onClose();
   };
 
   const handleClose = () => {
-    // Limpiar estados al cerrar
+    resetForm();
+    onClose();
+  };
+
+  const resetForm = () => {
     setTitle("");
     setDescription("");
     setSelectedFile(null);
     setPreviewUrl(null);
-    onClose();
+    setCaptureDate("");
+    setCamera("");
+    setLens("");
+    setIso("");
+    setExposure("");
+    setAperture("");
+    setMoonPhase("");
+    setLatitude("");
+    setLongitude("");
+    setLocationName("");
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Add new image</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          Select an image to add to your gallery.
+          Add an image to your gallery with detailed information.
         </DialogContentText>
+        
         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Button 
             variant="outlined" 
@@ -87,7 +118,7 @@ function AddImageDialog({ open, onClose, onConfirm }) {
                 alt="Preview"
                 style={{
                   maxWidth: '100%',
-                  maxHeight: '300px',
+                  maxHeight: '250px',
                   borderRadius: '8px',
                 }}
               />
@@ -100,27 +131,135 @@ function AddImageDialog({ open, onClose, onConfirm }) {
             fullWidth
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            required
           />
           <TextField
             label="Image description"
             variant="outlined"
             fullWidth
             multiline
-            rows={4}
+            rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+
+          {/* Fecha de captura */}
+          <TextField
+            label="Capture Date"
+            variant="outlined"
+            fullWidth
+            type="date"
+            value={captureDate}
+            onChange={(e) => setCaptureDate(e.target.value)}
+          />
+
+          {/* Información astronómica */}
+          <TextField
+            label="Moon illumination (%)"
+            variant="outlined"
+            fullWidth
+            type="number"
+            value={moonPhase}
+            onChange={(e) => setMoonPhase(e.target.value)}
+            placeholder="0-100"
+          />
+
+          {/* Ubicación */}
+          <TextField
+            label="Location Name"
+            variant="outlined"
+            fullWidth
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            placeholder="e.g., Teide Observatory, Tenerife"
+          />
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                label="Latitude"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={latitude}
+                onChange={(e) => setLatitude(e.target.value)}
+                placeholder="28.300000"
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                label="Longitude"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={longitude}
+                onChange={(e) => setLongitude(e.target.value)}
+                placeholder="-16.510000"
+                
+              />
+            </Grid>
+          </Grid>
+
+          {/* Metadata de cámara */}
+          <TextField
+            label="Camera"
+            variant="outlined"
+            fullWidth
+            value={camera}
+            onChange={(e) => setCamera(e.target.value)}
+            placeholder="e.g., Canon EOS R5"
+          />
+          <TextField
+            label="Lens"
+            variant="outlined"
+            fullWidth
+            value={lens}
+            onChange={(e) => setLens(e.target.value)}
+            placeholder="e.g., 200-500mm f/5.6"
+          />
+          <Grid container spacing={2}>
+            <Grid item xs={4}>
+              <TextField
+                label="ISO"
+                variant="outlined"
+                fullWidth
+                value={iso}
+                onChange={(e) => setIso(e.target.value)}
+                placeholder="3200"
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                label="Exposure"
+                variant="outlined"
+                fullWidth
+                value={exposure}
+                onChange={(e) => setExposure(e.target.value)}
+                placeholder="1/250s"
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField
+                label="Aperture"
+                variant="outlined"
+                fullWidth
+                value={aperture}
+                onChange={(e) => setAperture(e.target.value)}
+                placeholder="f/5.6"
+              />
+            </Grid>
+          </Grid>
         </Box>
       </DialogContent>
+      
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={handleClose}>Cancel</Button>
         <Button 
           onClick={handleConfirm} 
           variant="contained" 
           color="primary"
-          disabled={!selectedFile}
+          disabled={!selectedFile || !title}
         >
-          Add
+          Add Image
         </Button>
       </DialogActions>
     </Dialog>
