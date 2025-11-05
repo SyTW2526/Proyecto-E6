@@ -65,7 +65,7 @@ function AddPostDialog({ open, onClose, onConfirm }) {
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
           <TextField
-            label="Post Title"
+            label="Post Title*"
             variant="outlined"
             fullWidth
             value={postTitle}
