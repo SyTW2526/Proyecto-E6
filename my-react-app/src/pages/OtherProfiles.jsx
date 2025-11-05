@@ -1,9 +1,12 @@
 import { Box, Typography } from "@mui/material";
 import AddPostButton from "../components/posts/add-post-button/AddPostButton";
-import AddImageDialog from "../components/images/add-image-dialog/AddImageDialog";
+import AddPostDialog from "../components/posts/add-post-dialog/AddPostDialog";
+import PostGrid from "../components/posts/post-grid/PostGrid";
+import { useAppContext } from "../AppContext";
 import { useState } from "react";
 
 function OtherProfiles() {
+  const { posts, addPost, deletePost } = useAppContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddClick = () => {
@@ -14,22 +17,43 @@ function OtherProfiles() {
     setIsDialogOpen(false);
   };
 
-  const handleConfirm = (imageData) => {
-    // Lógica para manejar la imagen añadida
-    console.log("Imagen añadida desde OtherProfiles:", imageData);
+  const handleConfirm = (postData) => {
+    addPost(postData);
+    handleCloseDialog();
+  };
+
+  const handleDeletePost = (postId) => {
+    deletePost(postId);
   };
 
   return (
     <Box>
-      <Typography variant="h3" gutterBottom>
-        Other User's Profiles
+      <Typography 
+        variant="h3" 
+        gutterBottom 
+        sx={{ 
+          textAlign: 'center',
+          color: 'primary.main',
+          fontWeight: 600,
+          mb: 4
+        }}
+      >
+        Other Profiles
       </Typography>
 
+      <Box sx={{ px: 3, maxWidth: '100%' }}>
+        <PostGrid 
+          posts={posts}
+          onDelete={handleDeletePost}
+        />
+      </Box>
+
       <AddPostButton onClick={handleAddClick} />
-      <AddImageDialog 
+
+      <AddPostDialog 
         open={isDialogOpen} 
-        onClose={handleCloseDialog}
-        onConfirm={handleConfirm}
+        onClose={handleCloseDialog} 
+        onConfirm={handleConfirm} 
       />
     </Box>
   );

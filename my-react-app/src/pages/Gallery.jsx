@@ -4,11 +4,10 @@ import AddImageButton from "../components/images/add-image-button/AddImageButton
 import AddImageDialog from "../components/images/add-image-dialog/AddImageDialog";
 import ImageGrid from "../components/images/image-grid/ImageGrid";
 import { useState } from "react";
-import { Photo } from "../models/Photo";
 
 function Gallery() {
+  const { photos, addPhoto, deletePhoto } = useAppContext(); // Usar contexto
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [photos, setPhotos] = useState([]); // Ahora usamos Photo objects
 
   const handleAddClick = () => {
     setIsDialogOpen(true);
@@ -19,18 +18,12 @@ function Gallery() {
   };
 
   const handleConfirm = (imageData) => {
-    // Crear una instancia de Photo usando el método estático
-    const currentUserId = 1; // Aquí deberías obtener el ID del usuario actual
-    const newPhoto = Photo.fromDialogData(imageData, currentUserId);
-    
-    const updatedPhotos = [...photos, newPhoto];
-    setPhotos(updatedPhotos);
-    console.log("Photo añadida:", newPhoto);
+    addPhoto(imageData); // Usar función del contexto
+    console.log("Photo añadida");
   };
 
   const handleDeletePhoto = (photoId) => {
-    const updatedPhotos = photos.filter(photo => photo.id !== photoId);
-    setPhotos(updatedPhotos);
+    deletePhoto(photoId); // Usar función del contexto
   };
 
   // Convertir Photo objects a formato completo para ImageGrid

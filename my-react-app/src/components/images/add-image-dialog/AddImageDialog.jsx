@@ -145,7 +145,6 @@ function AddImageDialog({ open, onClose, onConfirm }) {
 
           {/* Fecha de captura */}
           <TextField
-            label="Capture Date"
             variant="outlined"
             fullWidth
             type="date"

@@ -1,92 +1,61 @@
+import { useAppContext } from '../../../AppContext';
+import { useState } from "react";
 import { 
   Dialog, 
   DialogTitle, 
   DialogContent, 
-  DialogContentText, 
   DialogActions, 
-  Button, 
+  Button,
   Box,
   TextField,
-  IconButton,
+  Grid,
   Card,
   CardMedia,
-  CardContent,
-  Typography,
-  Grid
+  Checkbox,
+  Typography
 } from "@mui/material";
-import { useState } from "react";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import DeleteIcon from "@mui/icons-material/Delete";
 
 function AddPostDialog({ open, onClose, onConfirm }) {
+  const { photos } = useAppContext(); // Obtener fotos del contexto
   const [postTitle, setPostTitle] = useState("");
   const [postDescription, setPostDescription] = useState("");
-  const [images, setImages] = useState([]); // Array de imágenes
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
 
-  const handleFileChange = (event) => {
-    const files = Array.from(event.target.files); // Convertir FileList a Array
-    
-    files.forEach((file) => {
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const newImage = {
-            id: Date.now() + Math.random(), // ID único
-            file: file,
-            preview: reader.result,
-            title: "",
-            description: ""
-          };
-          setImages((prevImages) => [...prevImages, newImage]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    
-    // Resetear el input para poder seleccionar el mismo archivo de nuevo
-    event.target.value = "";
-  };
-
-  const handleImageTitleChange = (imageId, newTitle) => {
-    setImages(images.map(img => 
-      img.id === imageId ? { ...img, title: newTitle } : img
-    ));
-  };
-
-  const handleImageDescriptionChange = (imageId, newDescription) => {
-    setImages(images.map(img => 
-      img.id === imageId ? { ...img, description: newDescription } : img
-    ));
-  };
-
-  const handleRemoveImage = (imageId) => {
-    setImages(images.filter(img => img.id !== imageId));
+  const handlePhotoToggle = (photoId) => {
+    if (selectedPhotoIds.includes(photoId)) {
+      setSelectedPhotoIds(selectedPhotoIds.filter(id => id !== photoId));
+    } else {
+      setSelectedPhotoIds([...selectedPhotoIds, photoId]);
+    }
   };
 
   const handleConfirm = () => {
-    if (images.length === 0) {
-      alert("Please add at least one image to your post");
+    if (selectedPhotoIds.length === 0) {
+      alert("Please select at least one photo");
       return;
     }
-    
-    onConfirm({ 
-      postTitle,
-      postDescription,
-      images: images
+
+    const selectedPhotos = photos.filter(photo => 
+      selectedPhotoIds.includes(photo.id)
+    );
+
+    onConfirm({
+      title: postTitle,
+      description: postDescription,
+      photos: selectedPhotos
     });
-    
-    // Limpiar todos los estados
+
+    // Limpiar
     setPostTitle("");
     setPostDescription("");
-    setImages([]);
+    setSelectedPhotoIds([]);
     onClose();
   };
 
   const handleClose = () => {
-    // Limpiar estados al cerrar
     setPostTitle("");
     setPostDescription("");
-    setImages([]);
+    setSelectedPhotoIds([]);
     onClose();
   };
 
@@ -94,12 +63,7 @@ function AddPostDialog({ open, onClose, onConfirm }) {
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
       <DialogTitle>Create New Post</DialogTitle>
       <DialogContent>
-        <DialogContentText>
-          Add images and information for your new post.
-        </DialogContentText>
-        
-        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {/* Campos del post general */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
           <TextField
             label="Post Title"
             variant="outlined"
@@ -117,86 +81,55 @@ function AddPostDialog({ open, onClose, onConfirm }) {
             onChange={(e) => setPostDescription(e.target.value)}
           />
 
-          {/* Botón para añadir imágenes */}
-          <Button 
-            variant="outlined" 
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            fullWidth
-          >
-            Add Images
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              hidden
-              onChange={handleFileChange}
-            />
-          </Button>
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Select Photos from Your Gallery ({selectedPhotoIds.length} selected)
+          </Typography>
 
-          {/* Lista de imágenes añadidas */}
-          {images.length > 0 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Images ({images.length})
-              </Typography>
-              <Grid container spacing={2}>
-                {images.map((image) => (
-                  <Grid item xs={12} sm={6} key={image.id}>
-                    <Card sx={{ position: 'relative' }}>
-                      {/* Botón de eliminar */}
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          }
-                        }}
-                        onClick={() => handleRemoveImage(image.id)}
-                        size="small"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-
-                      {/* Preview de la imagen */}
-                      <CardMedia
-                        component="img"
-                        height="150"
-                        image={image.preview}
-                        alt={image.title || 'Image preview'}
-                        sx={{ objectFit: 'cover' }}
-                      />
-
-                      {/* Campos de título y descripción por imagen */}
-                      <CardContent>
-                        <TextField
-                          label="Image Title"
-                          variant="outlined"
-                          fullWidth
-                          size="small"
-                          value={image.title}
-                          onChange={(e) => handleImageTitleChange(image.id, e.target.value)}
-                          sx={{ mb: 1 }}
-                        />
-                        <TextField
-                          label="Image Description"
-                          variant="outlined"
-                          fullWidth
-                          size="small"
-                          multiline
-                          rows={2}
-                          value={image.description}
-                          onChange={(e) => handleImageDescriptionChange(image.id, e.target.value)}
-                        />
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </Box>
+          {photos.length === 0 ? (
+            <Typography color="text.secondary">
+              No photos in your gallery. Add some photos first!
+            </Typography>
+          ) : (
+            <Grid container spacing={2}>
+              {photos.map((photo) => (
+                <Grid item xs={6} sm={4} md={3} key={photo.id}>
+                  <Card 
+                    sx={{ 
+                      position: 'relative',
+                      cursor: 'pointer',
+                      border: selectedPhotoIds.includes(photo.id) ? '3px solid' : 'none',
+                      borderColor: 'primary.main'
+                    }}
+                    onClick={() => handlePhotoToggle(photo.id)}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={photo.imageUrl}
+                      alt={photo.title}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                    <Checkbox
+                      checked={selectedPhotoIds.includes(photo.id)}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        }
+                      }}
+                    />
+                    <Box sx={{ p: 1 }}>
+                      <Typography variant="caption" noWrap>
+                        {photo.title || 'Untitled'}
+                      </Typography>
+                    </Box>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
           )}
         </Box>
       </DialogContent>
@@ -207,9 +140,9 @@ function AddPostDialog({ open, onClose, onConfirm }) {
           onClick={handleConfirm} 
           variant="contained" 
           color="primary"
-          disabled={images.length === 0}
+          disabled={selectedPhotoIds.length === 0 || !postTitle}
         >
-          Create Post ({images.length} {images.length === 1 ? 'image' : 'images'})
+          Create Post ({selectedPhotoIds.length} photos)
         </Button>
       </DialogActions>
     </Dialog>

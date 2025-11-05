@@ -18,7 +18,6 @@ function ImageGrid({ images, onDelete }) {
   };
 
   const handleDelete = (imageId, event) => {
-    event.stopPropagation(); // Evitar que se abra el modal al eliminar
     onDelete(imageId);
   };
 
@@ -120,7 +119,7 @@ function ImageGrid({ images, onDelete }) {
                     p: 2
                   }}>
                     <img
-                      src={selectedImage.preview}
+                      src={selectedImage.imageUrl}
                       alt={selectedImage.title}
                       style={{
                         maxWidth: '100%',
