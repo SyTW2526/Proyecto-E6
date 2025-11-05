@@ -1,10 +1,7 @@
-import { Grid, Card, CardMedia, CardContent, Typography, Dialog, DialogTitle, DialogContent, Box, IconButton, CardActions, Divider, Chip } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Grid, Card, CardMedia, CardContent, Typography, IconButton, CardActions } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import NightsStayIcon from "@mui/icons-material/NightsStay";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import { useState } from "react";
+import ImageDetailDialog from "../image-detail-dialog/ImageDetailDialog";
 
 function ImageGrid({ images, onDelete }) {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -89,150 +86,11 @@ function ImageGrid({ images, onDelete }) {
         ))}
       </Grid>
 
-      {/* Modal para mostrar la imagen en grande */}
-      <Dialog 
-        open={!!selectedImage} 
+      <ImageDetailDialog 
+        image={selectedImage}
+        open={!!selectedImage}
         onClose={handleClose}
-        maxWidth="lg"
-        fullWidth
-      >
-        {selectedImage && (
-          <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5">
-                  {selectedImage.title || 'Untitled'}
-                </Typography>
-                <IconButton onClick={handleClose}>
-                  <CloseIcon />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-            <DialogContent>
-              <Grid container spacing={3}>
-                {/* Imagen */}
-                <Grid item xs={12} md={7}>
-                  <Box sx={{ 
-                    textAlign: 'center',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: 2,
-                    p: 2
-                  }}>
-                    <img
-                      src={selectedImage.imageUrl}
-                      alt={selectedImage.title}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '60vh',
-                        borderRadius: '8px',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  </Box>
-                </Grid>
-
-                {/* Información */}
-                <Grid item xs={12} md={5}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {/* Descripción */}
-                    <Box>
-                      <Typography variant="h6" gutterBottom>
-                        Description
-                      </Typography>
-                      <Typography variant="body1" color="text.secondary">
-                        {selectedImage.description || 'Unknown'}
-                      </Typography>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Información Astronómica */}
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <NightsStayIcon fontSize="small" />
-                        <Typography variant="h6">
-                          Astronomical Info
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Moon Illumination:</strong> {selectedImage.moonPhase !== null && selectedImage.moonPhase !== undefined ? `${(selectedImage.moonPhase * 100).toFixed(0)}%` : 'Unknown'}
-                      </Typography>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Ubicación */}
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <LocationOnIcon fontSize="small" />
-                        <Typography variant="h6">
-                          Location
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        <strong>Name:</strong> {selectedImage.location?.name || 'Unknown'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        <strong>Latitude:</strong> {selectedImage.location?.lat || 'Unknown'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Longitude:</strong> {selectedImage.location?.lng || 'Unknown'}
-                      </Typography>
-                    </Box>
-
-                    <Divider />
-
-                    {/* Metadata de cámara */}
-                    <Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <CameraAltIcon fontSize="small" />
-                        <Typography variant="h6">
-                          Camera Settings
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        <strong>Camera:</strong> {selectedImage.metadata?.camera || 'Unknown'}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        <strong>Lens:</strong> {selectedImage.metadata?.lens || 'Unknown'}
-                      </Typography>
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                        <Chip 
-                          label={`ISO: ${selectedImage.metadata?.iso || 'Unknown'}`} 
-                          size="small" 
-                          variant="outlined"
-                        />
-                        <Chip 
-                          label={`Exposure: ${selectedImage.metadata?.exposure || 'Unknown'}`} 
-                          size="small" 
-                          variant="outlined"
-                        />
-                        <Chip 
-                          label={`Aperture: ${selectedImage.metadata?.aperture || 'Unknown'}`} 
-                          size="small" 
-                          variant="outlined"
-                        />
-                      </Box>
-                    </Box>
-
-                    {/* Fecha */}
-                    {selectedImage.date && (
-                      <>
-                        <Divider />
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">
-                            <strong>Date:</strong> {new Date(selectedImage.date).toLocaleString()}
-                          </Typography>
-                        </Box>
-                      </>
-                    )}
-                  </Box>
-                </Grid>
-              </Grid>
-            </DialogContent>
-          </>
-        )}
-      </Dialog>
+      />
     </>
   );
 }

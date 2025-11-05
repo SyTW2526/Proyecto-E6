@@ -1,12 +1,13 @@
-import { Grid, Card, CardMedia, CardContent, Typography, Dialog, DialogTitle, DialogContent, Box, IconButton, 
+import { Grid, Card, CardContent, Typography, Dialog, DialogTitle, DialogContent, Box, IconButton, 
          CardActions, Divider, ImageList, ImageListItem } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ImageIcon from "@mui/icons-material/Image";
 import { useState } from "react";
+import ImageDetailDialog from "../../images/image-detail-dialog/ImageDetailDialog";
 
 function PostGrid({ posts, onDelete }) {
   const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const handlePostClick = (post) => {
     setSelectedPost(post);
@@ -14,6 +15,15 @@ function PostGrid({ posts, onDelete }) {
 
   const handleClose = () => {
     setSelectedPost(null);
+  };
+
+  const handleImageClick = (photo, event) => {
+    event.stopPropagation();
+    setSelectedImage(photo);
+  };
+
+  const handleImageClose = () => {
+    setSelectedImage(null);
   };
 
   const handleDelete = (postId, event) => {
@@ -159,7 +169,18 @@ function PostGrid({ posts, onDelete }) {
           </Typography>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {selectedPost?.photos.map((photo) => (
-              <Box key={photo.id} sx={{ width: 'calc(50% - 8px)' }}>
+              <Box 
+                key={photo.id} 
+                sx={{ 
+                  width: 'calc(50% - 8px)',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s',
+                  '&:hover': {
+                    transform: 'scale(1.05)'
+                  }
+                }}
+                onClick={(e) => handleImageClick(photo, e)}
+              >
                 <img 
                   src={photo.imageUrl} 
                   alt={photo.title} 
@@ -173,6 +194,12 @@ function PostGrid({ posts, onDelete }) {
           </Box>
         </DialogContent>
       </Dialog>
+
+      <ImageDetailDialog 
+        image={selectedImage}
+        open={!!selectedImage}
+        onClose={handleImageClose}
+      />
     </>
   );
 }
