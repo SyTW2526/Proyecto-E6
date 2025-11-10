@@ -57,10 +57,24 @@ router.put('/:id', async (req, res) => {
 // DELETE - Eliminar una foto
 router.delete('/:id', async (req, res) => {
   try {
-    const deletedPhoto = await Photo.findByIdAndDelete(req.params.id);
-    if (!deletedPhoto) {
+    const { userId } = req.query;
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'Se requiere el ID del usuario' });
+    }
+    
+    const photo = await Photo.findById(req.params.id);
+    
+    if (!photo) {
       return res.status(404).json({ message: 'Foto no encontrada' });
     }
+    
+    // Verificar que el usuario que intenta borrar sea el dueño de la foto
+    if (photo.userId !== userId) {
+      return res.status(403).json({ message: 'No tienes permiso para eliminar esta foto' });
+    }
+    
+    await Photo.findByIdAndDelete(req.params.id);
     res.json({ message: 'Foto eliminada exitosamente' });
   } catch (error) {
     res.status(500).json({ message: 'Error al eliminar foto', error: error.message });

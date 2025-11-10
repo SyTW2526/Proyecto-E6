@@ -47,12 +47,15 @@ export const updatePhoto = async (photoId, photoData) => {
   }
 };
 
-export const deletePhoto = async (photoId) => {
+export const deletePhoto = async (photoId, userId) => {
   try {
-    const response = await fetch(`${API_URL}/photos/${photoId}`, {
+    const response = await fetch(`${API_URL}/photos/${photoId}?userId=${userId}`, {
       method: 'DELETE',
     });
-    if (!response.ok) throw new Error('Error al eliminar foto');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al eliminar foto');
+    }
     return await response.json();
   } catch (error) {
     console.error('Error:', error);
@@ -100,6 +103,127 @@ export const addComment = async (photoId, userId, text) => {
       body: JSON.stringify({ userId, text }),
     });
     if (!response.ok) throw new Error('Error al agregar comentario');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+// ============ POSTS ============
+
+export const fetchPosts = async () => {
+  try {
+    const response = await fetch(`${API_URL}/posts`);
+    if (!response.ok) throw new Error('Error al obtener posts');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const fetchUserPosts = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/user/${userId}`);
+    if (!response.ok) throw new Error('Error al obtener posts del usuario');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const createPost = async (postData) => {
+  try {
+    const response = await fetch(`${API_URL}/posts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) throw new Error('Error al crear post');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const updatePost = async (postId, postData) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(postData),
+    });
+    if (!response.ok) throw new Error('Error al actualizar post');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const deletePost = async (postId, userId) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}?userId=${userId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al eliminar post');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const likePost = async (postId, userId) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}/like`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+    if (!response.ok) throw new Error('Error al dar like al post');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const unlikePost = async (postId, userId) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}/like/${userId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Error al quitar like del post');
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+export const addPostComment = async (postId, userId, userName, text) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}/comment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, userName, text }),
+    });
+    if (!response.ok) throw new Error('Error al agregar comentario al post');
     return await response.json();
   } catch (error) {
     console.error('Error:', error);

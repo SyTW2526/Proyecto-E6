@@ -17,24 +17,32 @@ function Gallery() {
     setIsDialogOpen(false);
   };
 
-  const handleConfirm = (imageData) => {
-    addPhoto(imageData); // Usar función del contexto
-    console.log("Photo añadida");
+  const handleConfirm = async (imageData) => {
+    try {
+      await addPhoto(imageData); // Usar función del contexto (ahora es async)
+      console.log("Photo añadida");
+    } catch (error) {
+      console.error("Error al añadir foto:", error);
+    }
   };
 
-  const handleDeletePhoto = (photoId) => {
-    deletePhoto(photoId); // Usar función del contexto
+  const handleDeletePhoto = async (photoId) => {
+    try {
+      await deletePhoto(photoId); // Usar función del contexto (ahora es async)
+    } catch (error) {
+      console.error("Error al eliminar foto:", error);
+    }
   };
 
-  // Convertir Photo objects a formato completo para ImageGrid
+  // Convertir datos del backend a formato para ImageGrid
   const imagesForGrid = photos.map(photo => ({
-    id: photo.id,
+    id: photo._id || photo.id, // MongoDB usa _id
     title: photo.title,
     description: photo.description,
     preview: photo.imageUrl,
-    likes: photo.getLikesCount(),
-    comments: photo.getCommentsCount(),
-    date: photo.date,
+    likes: Array.isArray(photo.likes) ? photo.likes.length : 0,
+    comments: Array.isArray(photo.comments) ? photo.comments.length : 0,
+    date: photo.createdAt || photo.date,
     moonPhase: photo.moonPhase,
     location: photo.location,
     metadata: photo.metadata
