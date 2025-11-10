@@ -5,7 +5,7 @@ import PostGrid from "../components/posts/post-grid/PostGrid";
 import { useAppContext } from "../AppContext";
 import { useState } from "react";
 
-function OtherProfiles() {
+function Community() {
   const { posts, addPost, deletePost } = useAppContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -17,13 +17,21 @@ function OtherProfiles() {
     setIsDialogOpen(false);
   };
 
-  const handleConfirm = (postData) => {
-    addPost(postData);
-    handleCloseDialog();
+  const handleConfirm = async (postData) => {
+    try {
+      await addPost(postData);
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Error al crear post:", error);
+    }
   };
 
-  const handleDeletePost = (postId) => {
-    deletePost(postId);
+  const handleDeletePost = async (postId) => {
+    try {
+      await deletePost(postId);
+    } catch (error) {
+      console.error("Error al eliminar post:", error);
+    }
   };
 
   return (
@@ -38,7 +46,7 @@ function OtherProfiles() {
           mb: 4
         }}
       >
-        Other Profiles
+        Community
       </Typography>
 
       <Box sx={{ px: 3, maxWidth: '100%' }}>
@@ -59,4 +67,4 @@ function OtherProfiles() {
   );
 }
 
-export default OtherProfiles;
+export default Community;

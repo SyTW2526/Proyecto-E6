@@ -25,7 +25,7 @@ export const sidepanelitems = [
   {
     id: 3,
     icon: <PeopleAltIcon />,
-    label: "Visit Other Profiles",
-    path: "/other-profiles",
+    label: "Community",
+    path: "/community",
   },
 ];
