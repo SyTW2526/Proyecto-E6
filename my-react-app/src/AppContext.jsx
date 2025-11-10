@@ -10,6 +10,7 @@ export function AppProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [photos, setPhotos] = useState([]);
+  const [posts, setPosts] = useState([]);
   const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [location, setLocation] = useState({ lat: 28.4636, lng: -16.2518 }); // Tenerife por defecto
@@ -54,17 +55,11 @@ export function AppProvider({ children }) {
   };
 
   // ============ ACCIONES PARA FOTOS ============
-  const addPhoto = (photoData) => {
-    const newPhoto = new Photo(
-      Date.now(), // ID temporal
-      currentUser?.id,
-      photoData.imageUrl,
-      photoData.moonPhase,
-      photoData.date,
-      photoData.location
-    );
-    setPhotos([...photos, newPhoto]);
-  };
+  const addPhoto = (imageData) => {
+  const newPhoto = Photo.fromDialogData(imageData, currentUser?.id || 1);
+  setPhotos([...photos, newPhoto]);
+  return newPhoto;
+};
 
   const deletePhoto = (photoId) => {
     setPhotos(photos.filter((p) => p.id !== photoId));
@@ -103,6 +98,47 @@ export function AppProvider({ children }) {
     );
   };
 
+  // ============ ACCIONES PARA POSTS ============
+  const addPost = (postData) => {
+    const newPost = {
+      id: Date.now(),
+      title: postData.title,
+      description: postData.description,
+      photos: postData.photos,
+      userId: currentUser?.id || 1,
+      userName: currentUser?.name || 'Unknown User',
+      createdAt: new Date().toISOString(),
+      likes: [],
+      comments: []
+    };
+    setPosts([...posts, newPost]);
+    return newPost;
+  };
+
+  const deletePost = (postId) => {
+    setPosts(posts.filter(post => post.id !== postId));
+  };
+
+  const likePost = (postId) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId && currentUser) {
+        if (!post.likes.includes(currentUser.id)) {
+          post.likes.push(currentUser.id);
+        }
+      }
+      return post;
+    }));
+  };
+
+  const unlikePost = (postId) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId && currentUser) {
+        post.likes = post.likes.filter(userId => userId !== currentUser.id);
+      }
+      return post;
+    }));
+  };
+
   // ============ ACCIONES PARA EVENTOS ============
   const addEvent = (eventData) => {
     const newEvent = new AstronomicalEvent(
@@ -134,6 +170,7 @@ export function AppProvider({ children }) {
     currentUser,
     users,
     photos,
+    posts,
     events,
     selectedDate,
     location,
