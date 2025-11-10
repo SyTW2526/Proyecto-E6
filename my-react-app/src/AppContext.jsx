@@ -1,7 +1,7 @@
-import { createContext, useContext, useState } from 'react';
-import { User } from './models/User';
-import { Photo } from './models/Photo';
-import { AstronomicalEvent } from './models/AstronomicalEvent';
+import { createContext, useContext, useState, useEffect } from "react";
+import { User } from "./models/User";
+import { Photo } from "./models/Photo";
+import { AstronomicalEvent } from "./models/AstronomicalEvent";
 
 const AppContext = createContext();
 
@@ -15,6 +15,20 @@ export function AppProvider({ children }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [location, setLocation] = useState({ lat: 28.4636, lng: -16.2518 }); // Tenerife por defecto
 
+  // Verificar si hay usuario guardado en localStorage al cargar
+  useEffect(() => {
+    const savedUser = localStorage.getItem("artemis_user");
+    if (savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error("Error al cargar usuario guardado:", error);
+        localStorage.removeItem("artemis_user");
+      }
+    }
+  }, []);
+
   // ============ ACCIONES PARA USUARIOS ============
   const loginUser = (userData) => {
     const user = new User(
@@ -25,10 +39,13 @@ export function AppProvider({ children }) {
       userData.bio
     );
     setCurrentUser(user);
+    // Guardar en localStorage para persistencia
+    localStorage.setItem("artemis_user", JSON.stringify(user));
   };
 
   const logoutUser = () => {
     setCurrentUser(null);
+    localStorage.removeItem("artemis_user");
   };
 
   const updateUserProfile = (userId, updates) => {
@@ -44,35 +61,41 @@ export function AppProvider({ children }) {
   return newPhoto;
 };
 
-const deletePhoto = (photoId) => {
-  setPhotos(photos.filter(photo => photo.id !== photoId));
-};
+  const deletePhoto = (photoId) => {
+    setPhotos(photos.filter((p) => p.id !== photoId));
+  };
 
   const likePhoto = (photoId) => {
-    setPhotos(photos.map(photo => {
-      if (photo.id === photoId && currentUser) {
-        photo.addLike(currentUser.id);
-      }
-      return photo;
-    }));
+    setPhotos(
+      photos.map((photo) => {
+        if (photo.id === photoId && currentUser) {
+          photo.addLike(currentUser.id);
+        }
+        return photo;
+      })
+    );
   };
 
   const unlikePhoto = (photoId) => {
-    setPhotos(photos.map(photo => {
-      if (photo.id === photoId && currentUser) {
-        photo.removeLike(currentUser.id);
-      }
-      return photo;
-    }));
+    setPhotos(
+      photos.map((photo) => {
+        if (photo.id === photoId && currentUser) {
+          photo.removeLike(currentUser.id);
+        }
+        return photo;
+      })
+    );
   };
 
   const addCommentToPhoto = (photoId, commentData) => {
-    setPhotos(photos.map(photo => {
-      if (photo.id === photoId) {
-        photo.addComment(commentData);
-      }
-      return photo;
-    }));
+    setPhotos(
+      photos.map((photo) => {
+        if (photo.id === photoId) {
+          photo.addComment(commentData);
+        }
+        return photo;
+      })
+    );
   };
 
   // ============ ACCIONES PARA POSTS ============
@@ -129,7 +152,7 @@ const deletePhoto = (photoId) => {
   };
 
   const getUpcomingEvents = () => {
-    return events.filter(event => event.isUpcoming());
+    return events.filter((event) => event.isUpcoming());
   };
 
   // ============ ACCIONES PARA CONFIGURACIÓN ============
@@ -151,46 +174,36 @@ const deletePhoto = (photoId) => {
     events,
     selectedDate,
     location,
-    
+
     // Acciones de usuarios
     loginUser,
     logoutUser,
     updateUserProfile,
-    
+
     // Acciones de fotos
     addPhoto,
     deletePhoto,
     likePhoto,
     unlikePhoto,
     addCommentToPhoto,
-    
-    // Acciones de posts
-    addPost,
-    deletePost,
-    likePost,
-    unlikePost,
-    
+
     // Acciones de eventos
     addEvent,
     getUpcomingEvents,
-    
+
     // Acciones de configuración
     updateLocation,
-    updateSelectedDate
+    updateSelectedDate,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 // Hook personalizado para usar el contexto
 export const useAppContext = () => {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error('useAppContext debe usarse dentro de un AppProvider');
+    throw new Error("useAppContext debe usarse dentro de un AppProvider");
   }
   return context;
 };
