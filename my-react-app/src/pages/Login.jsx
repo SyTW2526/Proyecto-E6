@@ -35,21 +35,22 @@ function Login() {
     setLoading(true);
 
     try {
-      // Aquí harás la petición a tu API
-      const response = await fetch("http://localhost:3000/api/auth/login", {
+      // Petición al backend en puerto 5000
+      const response = await fetch("http://localhost:5000/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
-        throw new Error("Credenciales incorrectas");
-      }
-
       const data = await response.json();
 
-      // Guardar usuario en Context
+      if (!response.ok) {
+        throw new Error(data.error || "Credenciales incorrectas");
+      }
+
+      // Guardar usuario y token en Context y localStorage
       loginUser(data.user);
+      localStorage.setItem('artemis_token', data.token);
 
       // Redirigir a home
       navigate("/");
