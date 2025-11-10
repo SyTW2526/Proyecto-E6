@@ -28,6 +28,7 @@ import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../AppContext";
 
 const drawerWidth = 240;
 const navItems = [{ text: "GitHub", icon: <GitHubIcon /> }];
@@ -41,6 +42,7 @@ const handleGitHubClick = () => {
 function DrawerAppBar(props) {
   const { window } = props;
   const navigate = useNavigate();
+  const { logoutUser } = useAppContext();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const openUserMenu = Boolean(anchorEl);
@@ -67,7 +69,8 @@ function DrawerAppBar(props) {
         navigate("/gallery");
         break;
       case "logout":
-        // Lógica para cerrar sesión
+        logoutUser();
+        navigate("/login");
         break;
     }
   };
