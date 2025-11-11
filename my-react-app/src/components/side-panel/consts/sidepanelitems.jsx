@@ -1,6 +1,7 @@
 import HomeIcon from "@mui/icons-material/Home";
 import EventIcon from "@mui/icons-material/Event";
 import SearchIcon from "@mui/icons-material/Search";
+import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 
 export const sidepanelitems = [
@@ -24,6 +25,12 @@ export const sidepanelitems = [
   },
   {
     id: 3,
+    icon: <PhotoLibraryIcon />,
+    label: "Gallery",
+    path: "/gallery",
+  },
+  {
+    id: 4,
     icon: <PeopleAltIcon />,
     label: "Community",
     path: "/community",
