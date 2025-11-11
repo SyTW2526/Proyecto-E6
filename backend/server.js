@@ -9,11 +9,12 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Aumentar límite para imágenes base64
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: "50mb" })); // Aumentar límite para imágenes base64
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Conexión con MongoDB
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("Conectado a MongoDB"))
   .catch((err) => console.error("Error conectando a MongoDB:", err));
 

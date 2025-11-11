@@ -68,7 +68,7 @@ function SignUp() {
 
       // Login automático después de registro
       loginUser(data.user);
-      localStorage.setItem('artemis_token', data.token);
+      localStorage.setItem("artemis_token", data.token);
 
       // Redirigir a home
       navigate("/");
