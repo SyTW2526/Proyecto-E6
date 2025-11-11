@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 import AddPostButton from "../components/posts/add-post-button/AddPostButton";
 import AddPostDialog from "../components/posts/add-post-dialog/AddPostDialog";
 import PostGrid from "../components/posts/post-grid/PostGrid";
@@ -36,18 +36,30 @@ function Community() {
 
   return (
     <Box>
-      <Typography 
-        variant="h3" 
-        gutterBottom 
-        sx={{ 
-          textAlign: 'center',
-          color: 'primary.main',
+      <Typography
+        variant="h3"
+        gutterBottom
+        sx={{
+          textAlign: "center",
+          color: "rgba(44, 44, 44, 0.9)",
           fontWeight: 600,
-          mb: 4
+          mb: 2,
         }}
       >
         Community
       </Typography>
+            {/* Aesthetic separator between title and images */}
+            <Divider
+              sx={{
+                width: ["90%", "70%"],
+                mx: "auto",
+                height: "6px",
+                borderRadius: 3,
+                background: "linear-gradient(30deg, rgba(24,124,255,0.9) 0%, rgba(0, 0, 0, 0.8) 50%, rgba(24,124,255,0.9) 100%)",
+                boxShadow: "0 4px 18px rgba(255,140,0,0.12)",
+                my: 3,
+              }}
+            />
 
       <Box sx={{ px: 3, maxWidth: '100%' }}>
         <PostGrid 
