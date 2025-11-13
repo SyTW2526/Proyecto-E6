@@ -67,7 +67,7 @@ function AstronomicalEvents() {
   const [events, setEvents] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
-  const apiKey = "a8d8720296e64d4e890601380772c514";
+  const apiKey = "7be2cb79c436402a900cf28c77da133c";
   const lat = 40.4168;
   const lon = -3.7038;
 
