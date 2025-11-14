@@ -104,7 +104,7 @@ export function AppProvider({ children }) {
   const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem("artemis_user");
-    localStorage.removeItem("artemis_token"); // También borrar el token
+    localStorage.removeItem("artemis_token");
   };
 
   const updateUserProfile = (userId, updates) => {
