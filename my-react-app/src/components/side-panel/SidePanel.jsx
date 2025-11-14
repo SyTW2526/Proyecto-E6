@@ -63,22 +63,45 @@ function SidePanel() {
                 <ListItem disablePadding sx={{ width: "100%" }}>
                   <Button
                     sx={{
-                      justifyContent: "flex-start",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 0.5,
                       color: "rgb(240,240,240)",
                       textTransform: "none",
-                      width: "100%",
+                      width: "calc(100% - 24px)",
+                      margin: "10px 12px",
+                      borderRadius: "12px",
+                      minHeight: 80,
                       backgroundColor: isActive
-                        ? "rgba(255, 123, 0, 0.35)"
-                        : "transparent",
-                      fontWeight: isActive ? 600 : 400,
+                        ? "rgba(255, 123, 0, 0.22)"
+                        : "rgba(255,255,255,0.02)",
+                      fontWeight: isActive ? 700 : 500,
+                      boxShadow: isActive ? "0 6px 20px rgba(255,123,0,0.12)" : "none",
+                      backdropFilter: "blur(4px)",
+                      transition: "all 180ms ease",
                       "&:hover": {
                         backgroundColor: isActive
-                          ? "rgba(255, 123, 0, 0.35)"
-                          : "rgb(70, 70, 70)",
+                          ? "rgba(255, 123, 0, 0.28)"
+                          : "rgba(255,255,255,0.06)",
                         color: "#ffffff",
+                        transform: "translateY(-2px)",
+                      },
+                      "& .sidepanel-icon": {
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "36px",
+                        height: "45px",
+                        "& svg": { fontSize: isActive ? "30px" : "40px" },
+                      },
+                      "& .sidepanel-label": {
+                        fontSize: "0.8rem",
+                        lineHeight: 1,
+                        opacity: 0.95,
                       },
                     }}
-                    startIcon={item.icon}
                     fullWidth
                     onClick={() => {
                       if (item.id !== 2) {
@@ -86,7 +109,10 @@ function SidePanel() {
                       }
                     }}
                   >
-                    {item.label}
+                    <Box className="sidepanel-icon">{item.icon}</Box>
+                    <Box component="span" className="sidepanel-label">
+                      {item.label}
+                    </Box>
                   </Button>
                 </ListItem>
                 {index < sidepanelitems.length - 1 && (

@@ -43,12 +43,21 @@ function AddImageDialog({ open, onClose, onConfirm }) {
       return;
     }
     
-    // Preparar los datos completos
-    const imageData = { title, description, file: selectedFile, preview: previewUrl,
-                        metadata: { camera, lens, iso, exposure, aperture },
+    // Preparar los datos completos con el formato correcto para el backend
+    const imageData = { 
+      title, 
+      description, 
+      imageUrl: previewUrl, // Base64 string de la imagen
+      camera, 
+      lens, 
+      iso, 
+      exposure, 
+      aperture,
       moonPhase: moonPhase ? parseFloat(moonPhase) / 100 : null,
       location: (latitude && longitude) ? {
-        lat: parseFloat(latitude), lng: parseFloat(longitude), name: locationName
+        lat: parseFloat(latitude), 
+        lng: parseFloat(longitude), 
+        name: locationName
       } : null,
       date: captureDate
     };

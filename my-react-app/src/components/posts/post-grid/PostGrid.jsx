@@ -4,8 +4,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useState } from "react";
 import ImageDetailDialog from "../../images/image-detail-dialog/ImageDetailDialog";
+import { useAppContext } from "../../../AppContext";
 
 function PostGrid({ posts, onDelete }) {
+  const { currentUser } = useAppContext();
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
 
@@ -55,7 +57,7 @@ function PostGrid({ posts, onDelete }) {
           const previewImages = getPreviewImages(post);
           
           return (
-            <Grid item key={post.id} xs={12} sm={6}>
+            <Grid item key={post._id || post.id} xs={12} sm={6}>
               <Card 
                 sx={{ 
                   cursor: 'pointer', 
@@ -76,7 +78,7 @@ function PostGrid({ posts, onDelete }) {
                   sx={{ width: '100%', height: 160 }}
                 >
                   {previewImages.map((photo) => (
-                    <ImageListItem key={photo.id}>
+                    <ImageListItem key={photo._id || photo.id}>
                       <img 
                         src={photo.imageUrl} 
                         alt={photo.title} 
@@ -123,11 +125,11 @@ function PostGrid({ posts, onDelete }) {
                     {post.description || 'No description'}
                   </Typography>
                 </CardContent>
-                {onDelete && (
+                {onDelete && currentUser && post.userId === currentUser.id && (
                   <CardActions>
                     <IconButton 
                       color="error" 
-                      onClick={(event) => handleDelete(post.id, event)}
+                      onClick={(event) => handleDelete(post._id || post.id, event)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -170,7 +172,7 @@ function PostGrid({ posts, onDelete }) {
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {selectedPost?.photos.map((photo) => (
               <Box 
-                key={photo.id} 
+                key={photo._id || photo.id} 
                 sx={{ 
                   width: 'calc(50% - 8px)',
                   cursor: 'pointer',

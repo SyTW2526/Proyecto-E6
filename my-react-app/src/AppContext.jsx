@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { User } from "./models/User";
 import { Photo } from "./models/Photo";
 import { AstronomicalEvent } from "./models/AstronomicalEvent";
+import * as api from "./services/api";
 
 const AppContext = createContext();
 
@@ -50,6 +51,42 @@ export function AppProvider({ children }) {
     }
   }, []);
 
+  // Cargar fotos cuando cambia el usuario actual
+  useEffect(() => {
+    const loadPhotos = async () => {
+      if (currentUser) {
+        try {
+          const photosData = await api.fetchPhotos(currentUser.id);
+          setPhotos(photosData);
+        } catch (error) {
+          console.error("Error al cargar fotos:", error);
+        }
+      } else {
+        setPhotos([]);
+      }
+    };
+    
+    loadPhotos();
+  }, [currentUser]);
+
+  // Cargar posts cuando cambia el usuario actual
+  useEffect(() => {
+    const loadPosts = async () => {
+      if (currentUser) {
+        try {
+          const postsData = await api.fetchPosts();
+          setPosts(postsData);
+        } catch (error) {
+          console.error("Error al cargar posts:", error);
+        }
+      } else {
+        setPosts([]);
+      }
+    };
+    
+    loadPosts();
+  }, [currentUser]);
+
   // ============ ACCIONES PARA USUARIOS ============
   const loginUser = (userData) => {
     const user = new User(
@@ -77,92 +114,191 @@ export function AppProvider({ children }) {
   };
 
   // ============ ACCIONES PARA FOTOS ============
-  const addPhoto = (imageData) => {
-    const newPhoto = Photo.fromDialogData(imageData, currentUser?.id || 1);
-    setPhotos([...photos, newPhoto]);
-    return newPhoto;
-  };
-
-  const deletePhoto = (photoId) => {
-    setPhotos(photos.filter((p) => p.id !== photoId));
-  };
-
-  const likePhoto = (photoId) => {
-    setPhotos(
-      photos.map((photo) => {
-        if (photo.id === photoId && currentUser) {
-          photo.addLike(currentUser.id);
+  const addPhoto = async (imageData) => {
+    try {
+      // Preparar los datos para el backend
+      const photoData = {
+        userId: currentUser?.id || 1,
+        title: imageData.title,
+        description: imageData.description,
+        imageUrl: imageData.imageUrl, // Base64 string
+        moonPhase: imageData.moonPhase,
+        location: imageData.location,
+        metadata: {
+          camera: imageData.camera,
+          lens: imageData.lens,
+          iso: imageData.iso,
+          exposure: imageData.exposure,
+          aperture: imageData.aperture
         }
-        return photo;
-      })
-    );
+      };
+
+      // Guardar en backend
+      const savedPhoto = await api.createPhoto(photoData);
+      
+      // Actualizar estado local
+      setPhotos([savedPhoto, ...photos]);
+      return savedPhoto;
+    } catch (error) {
+      console.error("Error al guardar foto:", error);
+      throw error;
+    }
   };
 
-  const unlikePhoto = (photoId) => {
-    setPhotos(
-      photos.map((photo) => {
-        if (photo.id === photoId && currentUser) {
-          photo.removeLike(currentUser.id);
-        }
-        return photo;
-      })
-    );
+  const deletePhoto = async (photoId) => {
+    try {
+      if (!currentUser) {
+        throw new Error("Debes estar logueado para eliminar fotos");
+      }
+      await api.deletePhoto(photoId, currentUser.id);
+      setPhotos(photos.filter((p) => p._id !== photoId));
+    } catch (error) {
+      console.error("Error al eliminar foto:", error);
+      alert(error.message || "No tienes permiso para eliminar esta foto");
+      throw error;
+    }
   };
 
-  const addCommentToPhoto = (photoId, commentData) => {
-    setPhotos(
-      photos.map((photo) => {
-        if (photo.id === photoId) {
-          photo.addComment(commentData);
-        }
-        return photo;
-      })
-    );
+  const likePhoto = async (photoId) => {
+    try {
+      if (!currentUser) return;
+      await api.likePhoto(photoId, currentUser.id);
+      setPhotos(
+        photos.map((photo) => {
+          if (photo._id === photoId) {
+            return { ...photo, likes: [...photo.likes, currentUser.id] };
+          }
+          return photo;
+        })
+      );
+    } catch (error) {
+      console.error("Error al dar like:", error);
+      throw error;
+    }
+  };
+
+  const unlikePhoto = async (photoId) => {
+    try {
+      if (!currentUser) return;
+      await api.unlikePhoto(photoId, currentUser.id);
+      setPhotos(
+        photos.map((photo) => {
+          if (photo._id === photoId) {
+            return { ...photo, likes: photo.likes.filter(id => id !== currentUser.id) };
+          }
+          return photo;
+        })
+      );
+    } catch (error) {
+      console.error("Error al quitar like:", error);
+      throw error;
+    }
+  };
+
+  const addCommentToPhoto = async (photoId, commentText) => {
+    try {
+      if (!currentUser) return;
+      const result = await api.addComment(photoId, currentUser.id, commentText);
+      setPhotos(
+        photos.map((photo) => {
+          if (photo._id === photoId) {
+            return result;
+          }
+          return photo;
+        })
+      );
+    } catch (error) {
+      console.error("Error al agregar comentario:", error);
+      throw error;
+    }
   };
 
   // ============ ACCIONES PARA POSTS ============
-  const addPost = (postData) => {
-    const newPost = {
-      id: Date.now(),
-      title: postData.title,
-      description: postData.description,
-      photos: postData.photos,
-      userId: currentUser?.id || 1,
-      userName: currentUser?.name || "Unknown User",
-      createdAt: new Date().toISOString(),
-      likes: [],
-      comments: [],
-    };
-    setPosts([...posts, newPost]);
-    return newPost;
+  const addPost = async (postData) => {
+    try {
+      const newPostData = {
+        userId: currentUser?.id || 1,
+        userName: currentUser?.name || 'Unknown User',
+        title: postData.title,
+        description: postData.description,
+        photos: postData.photos || [] // Array de IDs de fotos
+      };
+
+      const savedPost = await api.createPost(newPostData);
+      setPosts([savedPost, ...posts]);
+      return savedPost;
+    } catch (error) {
+      console.error("Error al crear post:", error);
+      throw error;
+    }
   };
 
-  const deletePost = (postId) => {
-    setPosts(posts.filter((post) => post.id !== postId));
+  const deletePost = async (postId) => {
+    try {
+      if (!currentUser) {
+        throw new Error("Debes estar logueado para eliminar posts");
+      }
+      await api.deletePost(postId, currentUser.id);
+      setPosts(posts.filter((p) => p._id !== postId));
+    } catch (error) {
+      console.error("Error al eliminar post:", error);
+      alert(error.message || "No tienes permiso para eliminar este post");
+      throw error;
+    }
   };
 
-  const likePost = (postId) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId && currentUser) {
-          if (!post.likes.includes(currentUser.id)) {
-            post.likes.push(currentUser.id);
+  const likePost = async (postId) => {
+    try {
+      if (!currentUser) return;
+      await api.likePost(postId, currentUser.id);
+      setPosts(
+        posts.map((post) => {
+          if (post._id === postId) {
+            return { ...post, likes: [...post.likes, currentUser.id] };
           }
-        }
-        return post;
-      })
-    );
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error al dar like al post:", error);
+      throw error;
+    }
   };
 
-  const unlikePost = (postId) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId && currentUser) {
-          post.likes = post.likes.filter((userId) => userId !== currentUser.id);
-        }
-        return post;
-      })
-    );
+  const unlikePost = async (postId) => {
+    try {
+      if (!currentUser) return;
+      await api.unlikePost(postId, currentUser.id);
+      setPosts(
+        posts.map((post) => {
+          if (post._id === postId) {
+            return { ...post, likes: post.likes.filter(id => id !== currentUser.id) };
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error al quitar like del post:", error);
+      throw error;
+    }
+  };
+
+  const addCommentToPost = async (postId, commentText) => {
+    try {
+      if (!currentUser) return;
+      const result = await api.addPostComment(postId, currentUser.id, currentUser.name, commentText);
+      setPosts(
+        posts.map((post) => {
+          if (post._id === postId) {
+            return result;
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error al agregar comentario al post:", error);
+      throw error;
+    }
   };
 
   // ============ ACCIONES PARA EVENTOS ============
@@ -213,6 +349,13 @@ export function AppProvider({ children }) {
     likePhoto,
     unlikePhoto,
     addCommentToPhoto,
+
+    // Acciones de posts
+    addPost,
+    deletePost,
+    likePost,
+    unlikePost,
+    addCommentToPost,
 
     // Acciones de eventos
     addEvent,

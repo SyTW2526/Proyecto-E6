@@ -24,7 +24,6 @@ import MoonIcon from "@mui/icons-material/Brightness3";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useNavigate } from "react-router-dom";
@@ -64,9 +63,6 @@ function DrawerAppBar(props) {
     switch (action) {
       case "edit-profile":
         navigate("/edit-user");
-        break;
-      case "gallery":
-        navigate("/gallery");
         break;
       case "logout":
         logoutUser();
@@ -211,12 +207,7 @@ function DrawerAppBar(props) {
           </ListItemIcon>
           <ListItemText>Edit profile</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleUserAction("gallery")}>
-          <ListItemIcon>
-            <PhotoLibraryIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Gallery</ListItemText>
-        </MenuItem>
+        {/* Gallery removed from profile dropdown; accessible from side panel */}
         <Divider />
         <MenuItem onClick={() => handleUserAction("logout")}>
           <ListItemIcon>
