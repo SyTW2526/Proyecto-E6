@@ -50,7 +50,7 @@ function Login() {
 
       // Guardar usuario y token en Context y localStorage
       loginUser(data.user);
-      localStorage.setItem('artemis_token', data.token);
+      localStorage.setItem("artemis_token", data.token);
 
       // Redirigir a home
       navigate("/");

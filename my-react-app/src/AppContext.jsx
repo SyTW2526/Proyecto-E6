@@ -9,6 +9,7 @@ const AppContext = createContext();
 export function AppProvider({ children }) {
   // Estado global de la aplicación
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true); // Estado de carga inicial
   const [users, setUsers] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -16,17 +17,37 @@ export function AppProvider({ children }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [location, setLocation] = useState({ lat: 28.4636, lng: -16.2518 }); // Tenerife por defecto
 
-  // Verificar si hay usuario guardado en localStorage al cargar
+  // Verificar si hay token guardado y validarlo con el servidor al cargar
   useEffect(() => {
-    const savedUser = localStorage.getItem("artemis_user");
-    if (savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setCurrentUser(userData);
-      } catch (error) {
-        console.error("Error al cargar usuario guardado:", error);
-        localStorage.removeItem("artemis_user");
-      }
+    const token = localStorage.getItem("artemis_token");
+
+    if (token) {
+      // Verificar token con el servidor
+      fetch("http://localhost:5000/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error("Token inválido");
+          return res.json();
+        })
+        .then((data) => {
+          // Token válido - establecer usuario
+          setCurrentUser(data.user);
+          localStorage.setItem("artemis_user", JSON.stringify(data.user));
+        })
+        .catch((error) => {
+          // Token expirado o inválido - limpiar localStorage
+          console.error("Sesión expirada:", error);
+          localStorage.removeItem("artemis_token");
+          localStorage.removeItem("artemis_user");
+        })
+        .finally(() => {
+          setLoading(false); // Terminó de verificar
+        });
+    } else {
+      setLoading(false); // No hay token, terminar carga
     }
   }, []);
 
@@ -83,6 +104,7 @@ export function AppProvider({ children }) {
   const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem("artemis_user");
+    localStorage.removeItem("artemis_token"); // También borrar el token
   };
 
   const updateUserProfile = (userId, updates) => {
@@ -308,6 +330,7 @@ export function AppProvider({ children }) {
   const value = {
     // Estado
     currentUser,
+    loading, // Compartir estado de carga
     users,
     photos,
     posts,
