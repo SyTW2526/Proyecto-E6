@@ -71,17 +71,33 @@ function AstronomicalEvents() {
   const lat = 40.4168;
   const lon = -3.7038;
 
-  // 🔹 Cargar TODAS las fases lunares del mes
+  // 🔹 Cargar TODAS las fases lunares del mes con caché
   useEffect(() => {
     async function loadMoonEvents() {
       setLoadingEvents(true);
       const today = new Date();
       const year = today.getFullYear();
       const month = today.getMonth();
+      
+      // Clave única para este mes
+      const cacheKey = `moon_events_${year}_${month}`;
+      
+      // Intentar cargar desde el caché
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      if (cachedData) {
+        console.log("✅ Cargando datos del caché para", `${year}-${month + 1}`);
+        const moonEvents = JSON.parse(cachedData);
+        setEvents(moonEvents);
+        setLoadingEvents(false);
+        return;
+      }
+
+      // Si no hay caché, hacer las peticiones a la API
+      console.log(`🔍 Cargando fases lunares desde API para ${year}-${month + 1}`);
+      
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       const moonEvents = [];
-
-      console.log(`🔍 Cargando fases lunares para todos los días de ${year}-${month + 1}`);
 
       // Procesar todos los días del mes
       for (let i = 1; i <= daysInMonth; i++) {
@@ -94,17 +110,14 @@ function AstronomicalEvents() {
           );
           const data = await res.json();
 
-          // LOG MUY DETALLADO para ver qué devuelve la API
           console.log(`📅 ${isoDate}:`, {
             moon_phase: data.moon_phase,
             moon_illumination: data.moon_illumination_percentage,
-            respuestaCompleta: data
           });
 
           // Agregar el emoji de la fase lunar de cada día
           if (data.moon_phase) {
             const emoji = getPhaseEmoji(data.moon_phase);
-            console.log(`  ➡️ Emoji asignado: ${emoji} para fase "${data.moon_phase}"`);
             
             moonEvents.push({
               title: emoji,
@@ -112,8 +125,6 @@ function AstronomicalEvents() {
               display: "background",
               classNames: ["moon-event", data.moon_phase.toLowerCase().replace(/\s+/g, '-')]
             });
-          } else {
-            console.warn(`  ⚠️ No hay moon_phase para ${isoDate}`);
           }
 
           // Pequeña pausa para no saturar la API
@@ -123,15 +134,11 @@ function AstronomicalEvents() {
         }
       }
 
-      console.log("✅ Fases lunares cargadas:", moonEvents);
-      console.log("📊 Total de días con fase lunar:", moonEvents.length);
+      console.log("✅ Fases lunares cargadas desde API:", moonEvents.length);
       
-      // Conteo por tipo de emoji
-      const emojiCount = {};
-      moonEvents.forEach(e => {
-        emojiCount[e.title] = (emojiCount[e.title] || 0) + 1;
-      });
-      console.log("📈 Distribución de emojis:", emojiCount);
+      // Guardar en caché
+      sessionStorage.setItem(cacheKey, JSON.stringify(moonEvents));
+      console.log("💾 Datos guardados en caché");
       
       setEvents(moonEvents);
       setLoadingEvents(false);
@@ -146,11 +153,27 @@ function AstronomicalEvents() {
     setLoading(true);
     setOpen(true);
 
+    // Intentar cargar desde caché primero
+    const cacheKey = `moon_detail_${dateStr}`;
+    const cachedDetail = sessionStorage.getItem(cacheKey);
+    
+    if (cachedDetail) {
+      console.log("✅ Detalles cargados desde caché para", dateStr);
+      setMoonData(JSON.parse(cachedDetail));
+      setLoading(false);
+      return;
+    }
+
+    // Si no hay caché, hacer petición
     try {
       const res = await fetch(
         `https://api.ipgeolocation.io/astronomy?apiKey=${apiKey}&lat=${lat}&long=${lon}&date=${dateStr}`
       );
       const data = await res.json();
+      
+      // Guardar en caché
+      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      
       setMoonData(data);
     } catch (error) {
       console.error("Error fetching moon data:", error);
