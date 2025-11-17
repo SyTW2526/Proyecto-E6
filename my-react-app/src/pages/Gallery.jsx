@@ -6,7 +6,7 @@ import ImageGrid from "../components/images/image-grid/ImageGrid";
 import { useState } from "react";
 
 function Gallery() {
-  const { photos, addPhoto, deletePhoto } = useAppContext(); // Usar contexto
+  const { photos, addPhoto, deletePhoto, loadingImages } = useAppContext(); // Usar contexto
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddClick = () => {
@@ -76,11 +76,31 @@ function Gallery() {
         }}
       />
 
-      <Box sx={{ mx: 2 }}>
-        <ImageGrid 
-          images={imagesForGrid} 
-          onDelete={handleDeletePhoto}
-        />
+      <Box sx={{ px: 3, maxWidth: '100%' }}>
+        {loadingImages ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+            }}
+          >
+            <Typography 
+              sx={{ 
+                mt: 2, 
+                color: 'text.secondary'
+              }}
+            >
+              Cargando imágenes...
+            </Typography>
+          </Box>
+        ) : (
+          <ImageGrid 
+            images={imagesForGrid}
+            onDelete={handleDeletePhoto}
+          />
+        )}
       </Box>
 
       <AddImageButton onClick={handleAddClick} />

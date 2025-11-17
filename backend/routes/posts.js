@@ -146,9 +146,11 @@ router.post('/:id/comment', async (req, res) => {
       return res.status(404).json({ message: 'Post no encontrado' });
     }
     
-    post.comments.push({ userId, userName, text, date: new Date() });
-    await post.save();
-    res.json(post);
+  post.comments.push({ userId, userName, text, date: new Date() });
+  await post.save();
+  // Return the post populated with photos to keep frontend data consistent
+  const populatedPost = await Post.findById(post._id).populate('photos');
+  res.json(populatedPost);
   } catch (error) {
     res.status(500).json({ message: 'Error al agregar comentario', error: error.message });
   }

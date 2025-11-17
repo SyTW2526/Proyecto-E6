@@ -38,7 +38,8 @@ function ProtectedLayout() {
       >
         <SidePanel />
 
-        <Box sx={{ flexGrow: 1, overflow: "hidden" }}>
+        {/* Allow the main content area to scroll when its content overflows */}
+        <Box sx={{ flexGrow: 1, overflow: "auto", minHeight: 0 }}>
           <Outlet />
         </Box>
       </Box>
