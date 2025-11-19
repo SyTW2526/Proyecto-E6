@@ -311,6 +311,27 @@ export function AppProvider({ children }) {
     }
   };
 
+  const deleteCommentFromPost = async (postId, commentId) => {
+    try {
+      if (!currentUser) {
+        throw new Error("Debes estar logueado para eliminar comentarios");
+      }
+      const result = await api.deletePostComment(postId, commentId, currentUser.id);
+      setPosts(
+        posts.map((post) => {
+          if (post._id === postId) {
+            return result;
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error al eliminar comentario:", error);
+      alert(error.message || "No tienes permiso para eliminar este comentario");
+      throw error;
+    }
+  };
+
   // ============ ACCIONES PARA EVENTOS ============
   const addEvent = (eventData) => {
     const newEvent = new AstronomicalEvent(
@@ -368,6 +389,7 @@ export function AppProvider({ children }) {
     likePost,
     unlikePost,
     addCommentToPost,
+    deleteCommentFromPost,
 
     // Acciones de eventos
     addEvent,

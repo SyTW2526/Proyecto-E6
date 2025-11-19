@@ -156,4 +156,43 @@ router.post('/:id/comment', async (req, res) => {
   }
 });
 
+// DELETE - Eliminar un comentario de un post
+router.delete('/:id/comment/:commentId', async (req, res) => {
+  try {
+    const { userId } = req.query; // Recibir userId como query parameter
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'Se requiere el ID del usuario' });
+    }
+    
+    const post = await Post.findById(req.params.id);
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post no encontrado' });
+    }
+    
+    // Buscar el comentario
+    const comment = post.comments.id(req.params.commentId);
+    
+    if (!comment) {
+      return res.status(404).json({ message: 'Comentario no encontrado' });
+    }
+    
+    // Verificar que el usuario que intenta borrar sea el dueño del comentario
+    if (comment.userId !== userId) {
+      return res.status(403).json({ message: 'No tienes permiso para eliminar este comentario' });
+    }
+    
+    // Eliminar el comentario
+    comment.deleteOne();
+    await post.save();
+    
+    // Return the post populated with photos to keep frontend data consistent
+    const populatedPost = await Post.findById(post._id).populate('photos');
+    res.json(populatedPost);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al eliminar comentario', error: error.message });
+  }
+});
+
 export default router;

@@ -11,7 +11,7 @@ import ImageDetailDialog from "../../images/image-detail-dialog/ImageDetailDialo
 import { useAppContext } from "../../../AppContext";
 
 function PostGrid({ posts, onDelete }) {
-  const { currentUser, likePost, unlikePost, addCommentToPost } = useAppContext();
+  const { currentUser, likePost, unlikePost, addCommentToPost, deleteCommentFromPost } = useAppContext();
   const [selectedPost, setSelectedPost] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [commentText, setCommentText] = useState("");
@@ -51,6 +51,20 @@ function PostGrid({ posts, onDelete }) {
       alert("Failed to add comment. Please try again.");
     } finally {
       setIsSubmittingComment(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId, event) => {
+    if (event) event.stopPropagation();
+    
+    if (!window.confirm("¿Estás seguro de que quieres eliminar este comentario?")) {
+      return;
+    }
+    
+    try {
+      await deleteCommentFromPost(selectedPost._id || selectedPost.id, commentId);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
     }
   };
 
@@ -297,6 +311,17 @@ function PostGrid({ posts, onDelete }) {
                       </Typography>
                     }
                   />
+                  {/* Delete button (only for comment owner) */}
+                  {currentUser && comment.userId === currentUser.id && (
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(event) => handleDeleteComment(comment._id, event)}
+                      sx={{ ml: 1 }}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  )}
                 </ListItem>
               ))
             ) : (
