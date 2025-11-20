@@ -358,10 +358,21 @@ export function AppProvider({ children }) {
   // ============ ACCIONES PARA CONFIGURACIÓN ============
   const updateLocation = (newLocation) => {
     setLocation(newLocation);
+    if (newLocation && typeof newLocation.lat !== "undefined") {
+      setLatitudeState(parseFloat(newLocation.lat));
+    }
+    if (newLocation && typeof newLocation.lng !== "undefined") {
+      setLongitudeState(parseFloat(newLocation.lng));
+    }
   };
 
   const updateSelectedDate = (newDate) => {
     setSelectedDate(newDate);
+  };
+
+  const updateActualDate = (newDate) => {
+    // normalize into dayjs for actualDate
+    setActualDate(dayjs(newDate));
   };
 
   // Valor del contexto (lo que compartimos con toda la app)
@@ -405,6 +416,7 @@ export function AppProvider({ children }) {
     // Acciones de configuración
     updateLocation,
     updateSelectedDate,
+    updateActualDate,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

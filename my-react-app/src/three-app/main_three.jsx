@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
@@ -13,7 +13,92 @@ let auxiliaryDate = new Date();
 
 function ThreeComponent() {
   const ref = useRef(null);
-  const { actualDate, latitudeState, longitudeState } = useAppContext();
+  const {
+    actualDate,
+    latitudeState,
+    longitudeState,
+    updateLocation,
+    updateSelectedDate,
+    updateActualDate,
+  } = useAppContext();
+
+  const [configOpen, setConfigOpen] = useState(false);
+  const [formDate, setFormDate] = useState("");
+  const [formTime, setFormTime] = useState("");
+  const [formLat, setFormLat] = useState("");
+  const [formLng, setFormLng] = useState("");
+
+  // helpers to format actualDate (which may be dayjs) for inputs
+  const dateForInput = (d) => {
+    try {
+      const dt = d && d.toDate ? d.toDate() : new Date(d);
+      return dt.toISOString().slice(0, 10);
+    } catch (e) {
+      return new Date().toISOString().slice(0, 10);
+    }
+  };
+
+  const timeForInput = (d) => {
+    try {
+      const dt = d && d.toDate ? d.toDate() : new Date(d);
+      return dt.toISOString().slice(11, 16);
+    } catch (e) {
+      return new Date().toISOString().slice(11, 16);
+    }
+  };
+
+  const openConfig = async () => {
+    // Determine defaults: if geolocation permission granted, use latitudeState/longitudeState
+    let useLat = latitudeState;
+    let useLng = longitudeState;
+    try {
+      if (navigator && navigator.permissions && navigator.permissions.query) {
+        const perm = await navigator.permissions.query({ name: "geolocation" });
+        if (perm.state === "granted") {
+          useLat = latitudeState;
+          useLng = longitudeState;
+        }
+      }
+    } catch (e) {
+      // Permissions API not available - fall back to context values
+    }
+
+    setFormDate(dateForInput(actualDate));
+    setFormTime(timeForInput(actualDate));
+    setFormLat(useLat);
+    setFormLng(useLng);
+    setConfigOpen(true);
+  };
+
+  const closeConfig = () => setConfigOpen(false);
+
+  const toggleConfig = async () => {
+    if (configOpen) {
+      closeConfig();
+    } else {
+      await openConfig();
+    }
+  };
+
+  const handleSave = () => {
+    // combine date and time
+    const iso = `${formDate}T${formTime}`;
+    const newDate = new Date(iso);
+    // update context
+    try {
+      updateLocation({ lat: parseFloat(formLat), lng: parseFloat(formLng) });
+    } catch (e) {
+      console.warn("updateLocation failed", e);
+    }
+    try {
+      updateSelectedDate(newDate);
+    } catch (e) {}
+    try {
+      updateActualDate(newDate);
+    } catch (e) {}
+    // ensure auxiliaryDate used by the animation is updated on next render
+    setConfigOpen(false);
+  };
 
   // Update the informational text when date or coordinates change
   useEffect(() => {
@@ -24,6 +109,12 @@ function ThreeComponent() {
   }, [actualDate, latitudeState, longitudeState]);
 
   useEffect(() => {
+    // Make sure the animation uses the currently selected date
+    auxiliaryDate =
+      actualDate && actualDate.toDate
+        ? actualDate.toDate()
+        : new Date(actualDate);
+
     // SCENE
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -269,6 +360,147 @@ function ThreeComponent() {
       ref={ref}
       style={{ width: "100%", height: "100%", position: "relative" }}
     >
+      {/* Config button in top-right */}
+      <button
+        onClick={toggleConfig}
+        title="Configuración"
+        aria-label="Abrir configuración"
+        style={{
+          position: "absolute",
+          top: "12px",
+          right: "12px",
+          zIndex: 70,
+          background: "rgba(0,0,0,0.75)",
+          color: "white",
+          border: "none",
+          width: "56px",
+          height: "56px",
+          padding: 0,
+          borderRadius: "50%",
+          cursor: "pointer",
+          fontSize: "28px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+        }}
+      >
+        ⚙
+      </button>
+
+      {/* Backdrop to close when clicking outside the modal */}
+      {configOpen && (
+        <div
+          onClick={closeConfig}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 65,
+            // transparent but still receives clicks
+            background: "transparent",
+          }}
+        />
+      )}
+
+      {/* Modal / dialog */}
+      {configOpen && (
+        <div
+          onClick={(e) =>
+            e.stopPropagation()
+          } /* prevent clicks inside modal from closing */
+          style={{
+            position: "absolute",
+            top: "52px",
+            right: "12px",
+            zIndex: 75,
+            background: "rgba(0,0,0,0.85)",
+            color: "white",
+            padding: "12px",
+            borderRadius: "8px",
+            minWidth: "280px",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.6)",
+          }}
+        >
+          <div style={{ marginBottom: "8px", fontWeight: "600" }}>
+            Configuración
+          </div>
+          <div style={{ marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px" }}>Fecha</label>
+            <input
+              type="date"
+              value={formDate}
+              onChange={(e) => setFormDate(e.target.value)}
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "12px" }}>Hora</label>
+            <input
+              type="time"
+              value={formTime}
+              onChange={(e) => setFormTime(e.target.value)}
+              style={{ width: "100%" }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: "12px" }}>
+                Latitud
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={formLat}
+                onChange={(e) => setFormLat(e.target.value)}
+                style={{ width: "100%" }}
+              />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: "block", fontSize: "12px" }}>
+                Longitud
+              </label>
+              <input
+                type="number"
+                step="0.0001"
+                value={formLng}
+                onChange={(e) => setFormLng(e.target.value)}
+                style={{ width: "100%" }}
+              />
+            </div>
+          </div>
+          <div
+            style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}
+          >
+            <button
+              onClick={closeConfig}
+              style={{
+                padding: "6px 10px",
+                borderRadius: "6px",
+                background: "#d21f1991",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave}
+              style={{
+                padding: "6px 10px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#1976d2",
+                color: "white",
+                cursor: "pointer",
+              }}
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      )}
+
       <div
         id="moon-info"
         style={{
