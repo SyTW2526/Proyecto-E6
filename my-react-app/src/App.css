@@ -1,8 +1,15 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh; /* allow the root to grow beyond viewport */
+  margin: 0;
+  padding: 0;
+  overflow: auto; /* enable scrolling when content overflows */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow: auto; /* allow page scrolling */
 }
 
 .logo {

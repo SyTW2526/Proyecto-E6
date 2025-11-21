@@ -24,10 +24,10 @@ import MoonIcon from "@mui/icons-material/Brightness3";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import EditIcon from "@mui/icons-material/Edit";
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import LogoutIcon from "@mui/icons-material/Logout";
 
 import { useNavigate } from "react-router-dom";
+import { useAppContext } from "../../AppContext";
 
 const drawerWidth = 240;
 const navItems = [{ text: "GitHub", icon: <GitHubIcon /> }];
@@ -41,6 +41,7 @@ const handleGitHubClick = () => {
 function DrawerAppBar(props) {
   const { window } = props;
   const navigate = useNavigate();
+  const { logoutUser } = useAppContext();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const openUserMenu = Boolean(anchorEl);
@@ -63,11 +64,9 @@ function DrawerAppBar(props) {
       case "edit-profile":
         navigate("/edit-user");
         break;
-      case "gallery":
-        navigate("/gallery");
-        break;
       case "logout":
-        // Lógica para cerrar sesión
+        logoutUser();
+        navigate("/login");
         break;
     }
   };
@@ -208,12 +207,7 @@ function DrawerAppBar(props) {
           </ListItemIcon>
           <ListItemText>Edit profile</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleUserAction("gallery")}>
-          <ListItemIcon>
-            <PhotoLibraryIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Gallery</ListItemText>
-        </MenuItem>
+        {/* Gallery removed from profile dropdown; accessible from side panel */}
         <Divider />
         <MenuItem onClick={() => handleUserAction("logout")}>
           <ListItemIcon>
