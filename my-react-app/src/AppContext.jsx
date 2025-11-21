@@ -12,6 +12,8 @@ export function AppProvider({ children }) {
   // Estado global de la aplicación
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true); // Estado de carga inicial
+  const [loadingPosts, setLoadingPosts] = useState(false); // Estado de carga de posts
+  const [loadingImages, setLoadingImages] = useState(false); // Estado de carga de imágenes
   const [users, setUsers] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -82,14 +84,18 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const loadPhotos = async () => {
       if (currentUser) {
+        setLoadingImages(true);
         try {
           const photosData = await api.fetchPhotos(currentUser.id);
           setPhotos(photosData);
         } catch (error) {
           console.error("Error al cargar fotos:", error);
+        } finally {
+          setLoadingImages(false);
         }
       } else {
         setPhotos([]);
+        setLoadingImages(false);
       }
     };
 
@@ -100,14 +106,18 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const loadPosts = async () => {
       if (currentUser) {
+        setLoadingPosts(true);
         try {
           const postsData = await api.fetchPosts();
           setPosts(postsData);
         } catch (error) {
           console.error("Error al cargar posts:", error);
+        } finally {
+          setLoadingPosts(false);
         }
       } else {
         setPosts([]);
+        setLoadingPosts(false);
       }
     };
 
@@ -339,6 +349,27 @@ export function AppProvider({ children }) {
     }
   };
 
+  const deleteCommentFromPost = async (postId, commentId) => {
+    try {
+      if (!currentUser) {
+        throw new Error("Debes estar logueado para eliminar comentarios");
+      }
+      const result = await api.deletePostComment(postId, commentId, currentUser.id);
+      setPosts(
+        posts.map((post) => {
+          if (post._id === postId) {
+            return result;
+          }
+          return post;
+        })
+      );
+    } catch (error) {
+      console.error("Error al eliminar comentario:", error);
+      alert(error.message || "No tienes permiso para eliminar este comentario");
+      throw error;
+    }
+  };
+
   // ============ ACCIONES PARA EVENTOS ============
   const addEvent = (eventData) => {
     const newEvent = new AstronomicalEvent(
@@ -380,6 +411,8 @@ export function AppProvider({ children }) {
     // Estado
     currentUser,
     loading, // Compartir estado de carga
+    loadingPosts, // Estado de carga de posts
+    loadingImages, // Estado de carga de imágenes
     users,
     photos,
     posts,
@@ -408,6 +441,7 @@ export function AppProvider({ children }) {
     likePost,
     unlikePost,
     addCommentToPost,
+    deleteCommentFromPost,
 
     // Acciones de eventos
     addEvent,

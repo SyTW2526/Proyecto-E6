@@ -230,3 +230,19 @@ export const addPostComment = async (postId, userId, userName, text) => {
     throw error;
   }
 };
+
+export const deletePostComment = async (postId, commentId, userId) => {
+  try {
+    const response = await fetch(`${API_URL}/posts/${postId}/comment/${commentId}?userId=${userId}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al eliminar comentario');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
