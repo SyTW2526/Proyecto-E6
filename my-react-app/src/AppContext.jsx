@@ -4,6 +4,8 @@ import { Photo } from "./models/Photo";
 import { AstronomicalEvent } from "./models/AstronomicalEvent";
 import * as api from "./services/api";
 
+import dayjs from "dayjs";
+
 const AppContext = createContext();
 
 export function AppProvider({ children }) {
@@ -18,9 +20,34 @@ export function AppProvider({ children }) {
   const [events, setEvents] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [location, setLocation] = useState({ lat: 28.4636, lng: -16.2518 }); // Tenerife por defecto
+  // initialize latitude/longitude from the default location so UI doesn't show 0,0 before geolocation resolves
+  const [longitudeState, setLongitudeState] = useState(location.lng);
+  const [latitudeState, setLatitudeState] = useState(location.lat);
+  const [actualDate, setActualDate] = useState(dayjs());
 
-  // Verificar si hay token guardado y validarlo con el servidor al cargar
   useEffect(() => {
+    // Geolocation: try to obtain current position. If it fails (permission denied, timeout), keep defaults.
+    if (typeof navigator !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        function (position) {
+          const lat = parseFloat(position.coords.latitude.toFixed(4));
+          const lng = parseFloat(position.coords.longitude.toFixed(4));
+          setLatitudeState(lat);
+          setLongitudeState(lng);
+          // Also update canonical location object used elsewhere
+          setLocation({ lat, lng });
+        },
+        function (err) {
+          // Could be permission denied, timeout, or position unavailable
+          console.warn("Geolocation error:", err);
+          // leave the defaults (Tenerife), or consider fetching IP-based location here
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 60 * 1000 }
+      );
+    } else {
+      console.warn("Geolocation API no disponible en este navegador");
+    }
+
     const token = localStorage.getItem("artemis_token");
 
     if (token) {
@@ -71,7 +98,7 @@ export function AppProvider({ children }) {
         setLoadingImages(false);
       }
     };
-    
+
     loadPhotos();
   }, [currentUser]);
 
@@ -93,7 +120,7 @@ export function AppProvider({ children }) {
         setLoadingPosts(false);
       }
     };
-    
+
     loadPosts();
   }, [currentUser]);
 
@@ -114,7 +141,7 @@ export function AppProvider({ children }) {
   const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem("artemis_user");
-    localStorage.removeItem("artemis_token"); // También borrar el token
+    localStorage.removeItem("artemis_token");
   };
 
   const updateUserProfile = (userId, updates) => {
@@ -139,13 +166,13 @@ export function AppProvider({ children }) {
           lens: imageData.lens,
           iso: imageData.iso,
           exposure: imageData.exposure,
-          aperture: imageData.aperture
-        }
+          aperture: imageData.aperture,
+        },
       };
 
       // Guardar en backend
       const savedPhoto = await api.createPhoto(photoData);
-      
+
       // Actualizar estado local
       setPhotos([savedPhoto, ...photos]);
       return savedPhoto;
@@ -194,7 +221,10 @@ export function AppProvider({ children }) {
       setPhotos(
         photos.map((photo) => {
           if (photo._id === photoId) {
-            return { ...photo, likes: photo.likes.filter(id => id !== currentUser.id) };
+            return {
+              ...photo,
+              likes: photo.likes.filter((id) => id !== currentUser.id),
+            };
           }
           return photo;
         })
@@ -228,10 +258,10 @@ export function AppProvider({ children }) {
     try {
       const newPostData = {
         userId: currentUser?.id || 1,
-        userName: currentUser?.name || 'Unknown User',
+        userName: currentUser?.name || "Unknown User",
         title: postData.title,
         description: postData.description,
-        photos: postData.photos || [] // Array de IDs de fotos
+        photos: postData.photos || [], // Array de IDs de fotos
       };
 
       const savedPost = await api.createPost(newPostData);
@@ -282,7 +312,10 @@ export function AppProvider({ children }) {
       setPosts(
         posts.map((post) => {
           if (post._id === postId) {
-            return { ...post, likes: post.likes.filter(id => id !== currentUser.id) };
+            return {
+              ...post,
+              likes: post.likes.filter((id) => id !== currentUser.id),
+            };
           }
           return post;
         })
@@ -296,7 +329,12 @@ export function AppProvider({ children }) {
   const addCommentToPost = async (postId, commentText) => {
     try {
       if (!currentUser) return;
-      const result = await api.addPostComment(postId, currentUser.id, currentUser.name, commentText);
+      const result = await api.addPostComment(
+        postId,
+        currentUser.id,
+        currentUser.name,
+        commentText
+      );
       setPosts(
         posts.map((post) => {
           if (post._id === postId) {
@@ -351,10 +389,21 @@ export function AppProvider({ children }) {
   // ============ ACCIONES PARA CONFIGURACIÓN ============
   const updateLocation = (newLocation) => {
     setLocation(newLocation);
+    if (newLocation && typeof newLocation.lat !== "undefined") {
+      setLatitudeState(parseFloat(newLocation.lat));
+    }
+    if (newLocation && typeof newLocation.lng !== "undefined") {
+      setLongitudeState(parseFloat(newLocation.lng));
+    }
   };
 
   const updateSelectedDate = (newDate) => {
     setSelectedDate(newDate);
+  };
+
+  const updateActualDate = (newDate) => {
+    // normalize into dayjs for actualDate
+    setActualDate(dayjs(newDate));
   };
 
   // Valor del contexto (lo que compartimos con toda la app)
@@ -370,6 +419,9 @@ export function AppProvider({ children }) {
     events,
     selectedDate,
     location,
+    actualDate,
+    latitudeState,
+    longitudeState,
 
     // Acciones de usuarios
     loginUser,
@@ -398,6 +450,7 @@ export function AppProvider({ children }) {
     // Acciones de configuración
     updateLocation,
     updateSelectedDate,
+    updateActualDate,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
