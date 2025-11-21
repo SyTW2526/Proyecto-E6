@@ -6,7 +6,7 @@ import { useAppContext } from "../AppContext";
 import { useState } from "react";
 
 function Community() {
-  const { posts, addPost, deletePost } = useAppContext();
+  const { posts, loadingPosts, addPost, deletePost } = useAppContext();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAddClick = () => {
@@ -62,10 +62,30 @@ function Community() {
             />
 
       <Box sx={{ px: 3, maxWidth: '100%' }}>
-        <PostGrid 
-          posts={posts}
-          onDelete={handleDeletePost}
-        />
+        {loadingPosts ? (
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              justifyContent: 'center',
+            }}
+          >
+            <Typography 
+              sx={{ 
+                mt: 2, 
+                color: 'text.secondary'
+              }}
+            >
+              Cargando posts...
+            </Typography>
+          </Box>
+        ) : (
+          <PostGrid 
+            posts={posts}
+            onDelete={handleDeletePost}
+          />
+        )}
       </Box>
 
       <AddPostButton onClick={handleAddClick} />
