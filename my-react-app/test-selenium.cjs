@@ -38,11 +38,14 @@ async function testArtemisApp() {
     .setChromeOptions(chromeOptions)
     .build();
 
+  // Aumentar timeout para CI (entornos más lentos)
+  await driver.manage().setTimeouts({ implicit: 30000, pageLoad: 60000, script: 60000 });
+
   try {
     // TEST 1: Cargar la página principal con bypass
     console.log('TEST 1: Configurando entorno de pruebas...');
     await driver.get('http://localhost:5173/?bypass_auth=true');
-    await driver.sleep(2000);
+    await driver.sleep(3000); // Aumentado para CI
     
     const title = await driver.getTitle();
     console.log(`    ✓ Título: "${title}"`);
