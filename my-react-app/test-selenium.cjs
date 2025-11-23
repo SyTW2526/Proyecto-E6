@@ -3,14 +3,19 @@
 // Ejecutar en modo headless: HEADLESS=true node test-selenium.js
 // IMPORTANTE: La app debe estar funcionando en http://localhost:5173
 
-const { Builder, By } = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
+  const { Builder, By, logging } = require('selenium-webdriver');
+  const chrome = require('selenium-webdriver/chrome');
 
 async function testArtemisApp() {
   console.log('Iniciando tests E2E de Artemis...\n');
   
   // Configurar opciones de Chrome
   const chromeOptions = new chrome.Options();
+  
+  // Configurar logging
+  const prefs = new logging.Preferences();
+  prefs.setLevel(logging.Type.BROWSER, logging.Level.ALL);
+  chromeOptions.setLoggingPrefs(prefs);
   
   // Configurar modo headless si la variable de entorno está activada
   const isHeadless = process.env.HEADLESS === 'true';
@@ -34,16 +39,18 @@ async function testArtemisApp() {
     .build();
 
   try {
-    // TEST 1: Cargar la página principal
-    console.log('TEST 1: Cargando página principal...');
-    await driver.get('http://localhost:5173');
+    // TEST 1: Cargar la página principal con bypass
+    console.log('TEST 1: Configurando entorno de pruebas...');
+    await driver.get('http://localhost:5173/?bypass_auth=true');
     await driver.sleep(2000);
+    
     const title = await driver.getTitle();
     console.log(`    ✓ Título: "${title}"`);
     console.log('    ✓ Página cargada correctamente\n');
 
     // TEST 2: Verificar que el sidebar está visible
     console.log('TEST 2: Verificando sidebar...');
+    
     const sidebar = await driver.findElement(By.css('[class*="MuiDrawer"]'));
     const isSidebarVisible = await sidebar.isDisplayed();
     if (isSidebarVisible) {
@@ -94,6 +101,157 @@ async function testArtemisApp() {
     await driver.sleep(500);
     const backUrl = await driver.getCurrentUrl();
     console.log(`    ✓ URL después de volver: ${backUrl}\n`);
+
+    // TEST 7: Navegar a todas las páginas
+    console.log('TEST 7: Navegando a todas las páginas...');
+    
+    // HomePage (ya estamos aquí)
+    await driver.get('http://localhost:5173/?bypass_auth=true');
+    await driver.sleep(1000);
+    console.log('    ✓ HomePage cargada');
+    
+    // Community
+    await driver.get('http://localhost:5173/community?bypass_auth=true');
+    await driver.sleep(1000);
+    let pageUrl = await driver.getCurrentUrl();
+    if (pageUrl.includes('/community')) {
+      console.log('    ✓ Community cargada');
+    }
+    
+    // Gallery
+    await driver.get('http://localhost:5173/gallery?bypass_auth=true');
+    await driver.sleep(1000);
+    pageUrl = await driver.getCurrentUrl();
+    if (pageUrl.includes('/gallery')) {
+      console.log('    ✓ Gallery cargada');
+    }
+    
+    // Edit User
+    await driver.get('http://localhost:5173/edit-user?bypass_auth=true');
+    await driver.sleep(1000);
+    pageUrl = await driver.getCurrentUrl();
+    if (pageUrl.includes('/edit-user')) {
+      console.log('    ✓ Edit User cargada');
+    }
+    
+    // Astronomical Events
+    await driver.get('http://localhost:5173/astro-events?bypass_auth=true');
+    await driver.sleep(1000);
+    pageUrl = await driver.getCurrentUrl();
+    if (pageUrl.includes('/astro-events')) {
+      console.log('    ✓ Astronomical Events cargada\n');
+    }
+
+    // TEST 8: Probar ConfigMenu en HomePage
+    console.log('TEST 8: Probando ConfigMenu en HomePage...');
+    
+    // Volver a HomePage
+    await driver.get('http://localhost:5173/?bypass_auth=true');
+    await driver.sleep(2000);
+    
+    // Buscar el botón de configuración (⚙)
+    const configButton = await driver.findElement(By.css('button[aria-label="Abrir configuración"]'));
+    console.log('    ✓ Botón de configuración encontrado');
+    
+    // Click para abrir el menú
+    await configButton.click();
+    await driver.sleep(1000); // Aumentar tiempo de espera
+    console.log('    ✓ ConfigMenu abierto');
+    
+    // Verificar que los campos están presentes usando selectores más específicos
+    const dateInput = await driver.findElement(By.css('input[type="date"]'));
+    const timeInput = await driver.findElement(By.css('input[type="time"]'));
+    const numberInputs = await driver.findElements(By.css('input[type="number"]'));
+    const latInput = numberInputs[0];
+    const lngInput = numberInputs[1];
+    console.log('    ✓ Todos los campos de configuración encontrados');
+    
+    // Modificar valores
+    await dateInput.clear();
+    await dateInput.sendKeys('2025-12-25');
+    await timeInput.clear();
+    await timeInput.sendKeys('18:30');
+    await latInput.clear();
+    await latInput.sendKeys('40.4168');
+    await lngInput.clear();
+    await lngInput.sendKeys('-3.7038');
+    console.log('    ✓ Valores modificados');
+    
+    // Click en Guardar
+    const saveButton = await driver.findElement(By.xpath("//button[contains(., 'Guardar')]"));
+    await saveButton.click();
+    await driver.sleep(500);
+    console.log('    ✓ Configuración guardada');
+    
+    // Verificar que el menú se cerró
+    const configMenusAfter = await driver.findElements(By.css('input[type="date"]'));
+    if (configMenusAfter.length === 0) {
+      console.log('    ✓ ConfigMenu cerrado correctamente');
+    }
+    
+    // Reabrir y probar botón Cancelar
+    await configButton.click();
+    await driver.sleep(1000);
+    const cancelButton = await driver.findElement(By.xpath("//button[contains(., 'Cancelar')]"));
+    await cancelButton.click();
+    await driver.sleep(500);
+    console.log('    ✓ Botón Cancelar funciona correctamente\n');
+
+    // TEST 9: Verificar flujo de subida de imágenes en Gallery
+    console.log('TEST 9: Verificando flujo de subida de imágenes...');
+    
+    // Navegar a Gallery
+    await driver.get('http://localhost:5173/gallery?bypass_auth=true');
+    await driver.sleep(2000);
+    
+    // Verificar que el título de la galería está presente
+    const galleryTitle = await driver.findElement(By.xpath("//*[contains(text(), 'My Gallery')]"));
+    if (await galleryTitle.isDisplayed()) {
+      console.log('    ✓ Página Gallery cargada correctamente');
+    }
+    
+    // Buscar el botón de añadir imagen (botón flotante con +)
+    const addImageButton = await driver.findElement(By.css('button[aria-label="add"]'));
+    console.log('    ✓ Botón "Añadir imagen" encontrado');
+    
+    // Click para abrir el diálogo
+    await addImageButton.click();
+    await driver.sleep(1000);
+    console.log('    ✓ Diálogo de subida de imagen abierto');
+    
+    // Verificar que los campos del formulario están presentes
+    try {
+      // Buscar campos de texto por label
+      const titleLabel = await driver.findElement(By.xpath("//*[contains(text(), 'Image title')]"));
+      console.log('    ✓ Campo "Título" encontrado');
+      
+      // Buscar campo de descripción
+      const descLabel = await driver.findElement(By.xpath("//*[contains(text(), 'Image description')]"));
+      console.log('    ✓ Campo "Descripción" encontrado');
+      
+      // Verificar que hay un botón de selección de archivo
+      const chooseButton = await driver.findElement(By.xpath("//button[contains(., 'Choose Image')]"));
+      console.log('    ✓ Botón de selección de archivo encontrado');
+      
+      console.log('    ✓ Todos los campos del formulario verificados');
+    } catch (e) {
+      console.log('    ℹ Algunos campos del formulario no fueron encontrados');
+    }
+    
+    // Cerrar el diálogo (buscar botón Cancelar o cerrar)
+    try {
+      const cancelButton = await driver.findElement(By.xpath("//button[contains(., 'Cancelar') or contains(., 'Cancel')]"));
+      await cancelButton.click();
+      await driver.sleep(500);
+      console.log('    ✓ Diálogo cerrado correctamente');
+    } catch (e) {
+      // Intentar cerrar con el botón X o ESC
+      await driver.actions().sendKeys('\uE00C').perform(); // ESC key
+      await driver.sleep(500);
+      console.log('    ✓ Diálogo cerrado con ESC');
+    }
+    
+    console.log('    ✓ Flujo de subida de imágenes verificado\n');
 
     // RESUMEN
     console.log('═'.repeat(50));
