@@ -95,17 +95,10 @@ function PostGrid({ posts, onDelete }) {
     return post.photos?.slice(0, 2) || [];
   };
 
-  // Ordenar posts por número de likes (de mayor a menor)
-  const sortedPosts = [...posts].sort((a, b) => {
-    const aLikes = Array.isArray(a.likes) ? a.likes.length : 0;
-    const bLikes = Array.isArray(b.likes) ? b.likes.length : 0;
-    return bLikes - aLikes;
-  });
-
   return (
     <>
   <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: 1300, mx: 'auto' }}>
-      {sortedPosts.map((post) => {
+      {posts.map((post) => {
           const previewImages = getPreviewImages(post);
           
           return (

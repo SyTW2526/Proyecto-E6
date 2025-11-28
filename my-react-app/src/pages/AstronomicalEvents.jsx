@@ -1,7 +1,10 @@
+
+import { SunCalc } from "../three-app/suncalc.js";
 import React, { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+
 import {
   Box,
   Typography,
@@ -9,7 +12,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  CircularProgress,
   LinearProgress,
   Slide,
 } from "@mui/material";
@@ -19,168 +21,86 @@ const Transition = React.forwardRef(function Transition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-const getPhaseColor = (phase) => {
-  switch (phase) {
-    case "NEW_MOON": return "#1a1a1a";
-    case "WAXING_CRESCENT": return "#757de8";
-    case "FIRST_QUARTER": return "#3949ab";
-    case "WAXING_GIBBOUS": return "#7986cb";
-    case "FULL_MOON": return "#fff59d";
-    case "WANING_GIBBOUS": return "#7986cb";
-    case "LAST_QUARTER": return "#3949ab";
-    case "WANING_CRESCENT": return "#757de8";
-    default: return "#f5f5f5";
-  }
+const getPhaseEmoji = (phase) => {
+  if (phase < 0.03) return "🌑"; // Nueva
+  if (phase < 0.22) return "🌒"; // Creciente
+  if (phase < 0.28) return "🌓"; // Cuarto creciente
+  if (phase < 0.47) return "🌔"; // Gibosa creciente
+  if (phase < 0.53) return "🌕"; // Llena
+  if (phase < 0.72) return "🌖"; // Gibosa menguante
+  if (phase < 0.78) return "🌗"; // Cuarto menguante
+  if (phase < 0.97) return "🌘"; // Menguante
+  return "🌑"; // Nueva
 };
 
-const getPhaseEmoji = (phase) => {
-  const phaseUpper = phase ? phase.toUpperCase() : "";
-  
-  switch (phaseUpper) {
-    case "NEW_MOON":
-      return "🌑";
-    case "WAXING_CRESCENT":
-      return "🌒";
-    case "FIRST_QUARTER":
-      return "🌓";
-    case "WAXING_GIBBOUS":
-      return "🌔";
-    case "FULL_MOON":
-      return "🌕";
-    case "WANING_GIBBOUS":
-      return "🌖";
-    case "LAST_QUARTER":
-      return "🌗";
-    case "WANING_CRESCENT":
-      return "🌘";
-    default:
-      console.warn(`⚠️ Fase desconocida: "${phase}"`);
-      return "🌙";
-  }
+const getPhaseName = (phase) => {
+  if (phase < 0.03) return "LUNA NUEVA";
+  if (phase < 0.22) return "CRECIENTE";
+  if (phase < 0.28) return "CUARTO CRECIENTE";
+  if (phase < 0.47) return "GIBOSA CRECIENTE";
+  if (phase < 0.53) return "LUNA LLENA";
+  if (phase < 0.72) return "GIBOSA MENGUANTE";
+  if (phase < 0.78) return "CUARTO MENGUANTE";
+  if (phase < 0.97) return "MENGUANTE";
+  return "LUNA NUEVA";
 };
 
 function AstronomicalEvents() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [moonData, setMoonData] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
 
-  const apiKey = "7be2cb79c436402a900cf28c77da133c";
-  const lat = 40.4168;
+  const lat = 40.4168; // Madrid
   const lon = -3.7038;
 
-  // 🔹 Cargar TODAS las fases lunares del mes con caché
+  // Cargar fases lunares del mes
   useEffect(() => {
-    async function loadMoonEvents() {
-      setLoadingEvents(true);
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
-      
-      // Clave única para este mes
-      const cacheKey = `moon_events_${year}_${month}`;
-      
-      // Intentar cargar desde el caché
-      const cachedData = sessionStorage.getItem(cacheKey);
-      
-      if (cachedData) {
-        console.log("✅ Cargando datos del caché para", `${year}-${month + 1}`);
-        const moonEvents = JSON.parse(cachedData);
-        setEvents(moonEvents);
-        setLoadingEvents(false);
-        return;
-      }
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const moonEvents = [];
 
-      // Si no hay caché, hacer las peticiones a la API
-      console.log(`🔍 Cargando fases lunares desde API para ${year}-${month + 1}`);
-      
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      const moonEvents = [];
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(year, month, i, 12, 0, 0);
+      const isoDate = date.toISOString().split("T")[0];
+      const illumination = SunCalc.getMoonIllumination(date);
+      const emoji = getPhaseEmoji(illumination.phase);
 
-      // Procesar todos los días del mes
-      for (let i = 1; i <= daysInMonth; i++) {
-        const date = new Date(year, month, i);
-        const isoDate = date.toISOString().split("T")[0];
-
-        try {
-          const res = await fetch(
-            `https://api.ipgeolocation.io/astronomy?apiKey=${apiKey}&lat=${lat}&long=${lon}&date=${isoDate}`
-          );
-          const data = await res.json();
-
-          console.log(`📅 ${isoDate}:`, {
-            moon_phase: data.moon_phase,
-            moon_illumination: data.moon_illumination_percentage,
-          });
-
-          // Agregar el emoji de la fase lunar de cada día
-          if (data.moon_phase) {
-            const emoji = getPhaseEmoji(data.moon_phase);
-            
-            moonEvents.push({
-              title: emoji,
-              date: isoDate,
-              display: "background",
-              classNames: ["moon-event", data.moon_phase.toLowerCase().replace(/\s+/g, '-')]
-            });
-          }
-
-          // Pequeña pausa para no saturar la API
-          await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (error) {
-          console.error(`❌ Error obteniendo fase lunar para ${isoDate}:`, error);
-        }
-      }
-
-      console.log("✅ Fases lunares cargadas desde API:", moonEvents.length);
-      
-      // Guardar en caché
-      sessionStorage.setItem(cacheKey, JSON.stringify(moonEvents));
-      console.log("💾 Datos guardados en caché");
-      
-      setEvents(moonEvents);
-      setLoadingEvents(false);
+      moonEvents.push({
+        title: emoji,
+        date: isoDate,
+        display: "background",
+        classNames: ["moon-event"]
+      });
     }
 
-    loadMoonEvents();
+    setEvents(moonEvents);
   }, []);
 
-  const handleDateClick = async (info) => {
+  const handleDateClick = (info) => {
     const dateStr = info.dateStr;
-    setSelectedDate(dateStr);
-    setLoading(true);
-    setOpen(true);
-
-    // Intentar cargar desde caché primero
-    const cacheKey = `moon_detail_${dateStr}`;
-    const cachedDetail = sessionStorage.getItem(cacheKey);
+    const date = new Date(dateStr + "T12:00:00");
     
-    if (cachedDetail) {
-      console.log("✅ Detalles cargados desde caché para", dateStr);
-      setMoonData(JSON.parse(cachedDetail));
-      setLoading(false);
-      return;
-    }
-
-    // Si no hay caché, hacer petición
-    try {
-      const res = await fetch(
-        `https://api.ipgeolocation.io/astronomy?apiKey=${apiKey}&lat=${lat}&long=${lon}&date=${dateStr}`
-      );
-      const data = await res.json();
-      
-      // Guardar en caché
-      sessionStorage.setItem(cacheKey, JSON.stringify(data));
-      
-      setMoonData(data);
-    } catch (error) {
-      console.error("Error fetching moon data:", error);
-      setMoonData(null);
-    } finally {
-      setLoading(false);
-    }
+    setSelectedDate(dateStr);
+    
+    // Calcular datos de la luna usando SunCalc
+    const illumination = SunCalc.getMoonIllumination(date);
+    const position = SunCalc.getMoonPosition(date, lat, lon);
+    const times = SunCalc.getMoonTimes(date, lat, lon);
+    
+    const moonInfo = {
+      phase: illumination.phase,
+      phaseName: getPhaseName(illumination.phase),
+      illumination: (illumination.fraction * 100).toFixed(1),
+      moonrise: times.rise ? times.rise.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+      moonset: times.set ? times.set.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
+      distance: Math.round(position.distance)
+    };
+    
+    setMoonData(moonInfo);
+    setOpen(true);
   };
 
   const handleClose = () => {
@@ -197,15 +117,6 @@ function AstronomicalEvents() {
         <Typography variant="body2" color="text.secondary" mb={3}>
           Cada día muestra su fase lunar. Pulsa sobre cualquier día para ver información detallada.
         </Typography>
-
-        {loadingEvents && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
-            <CircularProgress size={20} />
-            <Typography variant="body2" color="text.secondary">
-              Cargando fases lunares del mes...
-            </Typography>
-          </Box>
-        )}
 
         <style>
           {`
@@ -279,15 +190,11 @@ function AstronomicalEvents() {
               textAlign: "center",
             }}
           >
-            {loading ? (
-              <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
-                <CircularProgress />
-              </Box>
-            ) : moonData ? (
+            {moonData ? (
               <Box sx={{ p: 1 }}>
-                <Typography variant="h3">{getPhaseEmoji(moonData.moon_phase)}</Typography>
+                <Typography variant="h3">{getPhaseEmoji(moonData.phase)}</Typography>
                 <Typography variant="h6" mb={1}>
-                  {moonData.moon_phase.replace(/_/g, " ")}
+                  {moonData.phaseName.replace(/_/g, " ")}
                 </Typography>
                 <Typography>
                   <strong>Salida de la luna:</strong> {moonData.moonrise}
@@ -296,14 +203,14 @@ function AstronomicalEvents() {
                   <strong>Puesta de la luna:</strong> {moonData.moonset}
                 </Typography>
                 <Typography>
-                  <strong>Distancia:</strong> {moonData.moon_distance} km
+                  <strong>Distancia:</strong> {moonData.distance} km
                 </Typography>
                 <Typography sx={{ mt: 1 }}>
-                  <strong>Iluminación:</strong> {Math.abs(moonData.moon_illumination_percentage)}%
+                  <strong>Iluminación:</strong> {moonData.illumination}%
                 </Typography>
                 <LinearProgress
                   variant="determinate"
-                  value={Number(moonData.moon_illumination_percentage)}
+                  value={Number(moonData.illumination)}
                   sx={{ height: 10, borderRadius: 5, mt: 1 }}
                 />
               </Box>
