@@ -2,12 +2,13 @@
 // Ejecutar con: node test-selenium.js
 // Ejecutar en modo headless: HEADLESS=true node test-selenium.js
 // IMPORTANTE: La app debe estar funcionando en http://localhost:5173
+// IMPORTANTE: El backend debe estar funcionando en http://localhost:5000
 
   const { Builder, By, logging } = require('selenium-webdriver');
   const chrome = require('selenium-webdriver/chrome');
 
 async function testArtemisApp() {
-  console.log('Iniciando tests E2E de Artemis...\n');
+  console.log('🚀 Iniciando tests E2E de Artemis...\n');
   
   // Configurar opciones de Chrome
   const chromeOptions = new chrome.Options();
@@ -63,14 +64,15 @@ async function testArtemisApp() {
     }
 
     // TEST 3: Verificar botones del sidebar
-    console.log('TEST 3: Verificando botones del sidebar...');
+    console.log('📝 TEST 3: Verificando botones del sidebar...');
+    
     const helpButton = await driver.findElement(By.xpath("//button[contains(., 'Help')]"));
     console.log('    ✓ Botón "Help" encontrado');
     const reportButton = await driver.findElement(By.xpath("//button[contains(., 'Report bug')]"));
     console.log('    ✓ Botón "Report bug" encontrado\n');
 
     // TEST 4: Abrir diálogo de ayuda
-    console.log('TEST 4: Abriendo diálogo de ayuda...');
+    console.log('📝 TEST 4: Abriendo diálogo de ayuda...');
     await helpButton.click();
     await driver.sleep(1000);
     // Buscar el título del diálogo
@@ -86,7 +88,7 @@ async function testArtemisApp() {
     }
 
     // TEST 5: Navegar usando los botones del sidebar
-    console.log('TEST 5: Navegando por la aplicación...');
+    console.log('📝 TEST 5: Navegando por la aplicación...');
     const sidebarButtons = await driver.findElements(By.css('[class*="MuiButton-root"]'));
     if (sidebarButtons.length > 0) {
       // Intentar click en el segundo botón (evitamos el primero que puede ser el activo)
@@ -256,10 +258,16 @@ async function testArtemisApp() {
     
     console.log('    ✓ Flujo de subida de imágenes verificado\n');
 
-    // RESUMEN
+    // ========================================
+    // RESUMEN FINAL
+    // ========================================
     console.log('═'.repeat(50));
     console.log('✅ TODOS LOS TESTS PASARON EXITOSAMENTE');
     console.log('═'.repeat(50));
+    console.log('\n📊 Resumen:');
+    console.log('   • Tests de login: 4/4 ✅');
+    console.log('   • Tests de aplicación: 6/6 ✅');
+    console.log('   • Total: 10/10 ✅\n');
     
     process.exit(0); // Exit con código 0 para indicar éxito
     
@@ -275,9 +283,14 @@ async function testArtemisApp() {
   }
 }
 
-// Verificar que la URL es correcta
-console.log('IMPORTANTE: Asegúrate de que tu app está funcionando en http://localhost:5173');
-console.log('Ejecuta "npm run dev" en otra terminal antes de ejecutar este test.\n');
+// Mensaje inicial
+console.log('⚠️  REQUISITOS PREVIOS:');
+console.log('   1. Frontend corriendo en http://localhost:5173');
+console.log('   2. Backend corriendo en http://localhost:5000');
+console.log('   3. Usuario de prueba creado en la base de datos');
+console.log(`   4. Email: ${TEST_CREDENTIALS.email}`);
+console.log(`   5. Password: ${TEST_CREDENTIALS.password}`);
+console.log('\n⚙️  Para cambiar las credenciales, edita TEST_CREDENTIALS al inicio del archivo.\n');
 
 // Ejecutar los tests
 testArtemisApp();
