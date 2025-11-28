@@ -115,6 +115,9 @@ function ThreeComponent() {
         ? actualDate.toDate()
         : new Date(actualDate);
 
+    if (!ref.current) return;
+
+
     // SCENE
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
@@ -231,9 +234,11 @@ function ThreeComponent() {
     }
 
     // INFO TEXT
-    document.getElementById(
-      "texto-informativo"
-    ).textContent = `${actualDate}, ${latitudeState}, ${longitudeState}`;
+    const infoTextEl = document.getElementById("texto-informativo");
+    if (infoTextEl) {
+      infoTextEl.textContent = `${actualDate}, ${latitudeState}, ${longitudeState}`;
+    }
+
 
     // RESIZE LISTENER
     const handleResize = () => {
@@ -340,9 +345,11 @@ function ThreeComponent() {
       // var moonPhase = moonIllumination.phase;
       var moonFraction = moonIllumination.fraction;
 
-      document.getElementById("moon-info").textContent = `${(
-        moonFraction * 100
-      ).toFixed(2)}%`;
+      const moonInfoEl = document.getElementById("moon-info");
+      if (moonInfoEl) {
+        moonInfoEl.textContent = `${(moonFraction * 100).toFixed(2)}%`;
+      }
+
     };
     animate();
 
