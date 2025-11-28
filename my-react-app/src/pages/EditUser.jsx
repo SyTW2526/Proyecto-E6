@@ -20,7 +20,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
-// URL base de tu API - AJUSTA ESTO A TU CONFIGURACIÓN
 const API_URL = "http://localhost:5000/api";
 
 function EditUser() {
@@ -80,7 +79,7 @@ function EditUser() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/users/profile`, {
+      const response = await fetch(`${API_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
