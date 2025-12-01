@@ -17,7 +17,7 @@ h1 { font-size: 20px; margin: 0;}
 h2 { font-size: 14px; }
 pre {
     font: 12px/1.4 Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    margin: 0;
+    margin: 0; 
     padding: 0;
     -moz-tab-size: 2;
     -o-tab-size:  2;
