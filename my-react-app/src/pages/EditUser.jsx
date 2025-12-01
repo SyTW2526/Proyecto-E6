@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -29,12 +29,18 @@ function EditUser() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [photoCount, setPhotoCount] = useState(0);
 
   // Estado para el formulario
   const [formData, setFormData] = useState({
     name: "",
     email: "",
   });
+
+  // Estado para la imagen de perfil
+  const [profileImage, setProfileImage] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Estado para mostrar/ocultar contraseña
   const [showPassword, setShowPassword] = useState(false);
@@ -58,7 +64,7 @@ function EditUser() {
 
   // Obtener token del localStorage
   const getToken = () => {
-    return localStorage.getItem("artemis_token"); // Mismo nombre que en Login
+    return localStorage.getItem("artemis_token");
   };
 
   // Cargar datos del usuario al montar el componente
@@ -79,7 +85,7 @@ function EditUser() {
         return;
       }
 
-      const response = await fetch(`${API_URL}/auth/me`, {
+      const response = await fetch(`${API_URL}/users/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -95,6 +101,14 @@ function EditUser() {
         name: data.user.name,
         email: data.user.email,
       });
+      setProfileImagePreview(data.user.profilePic);
+
+      // Obtener el número de fotos del usuario
+      const photosResponse = await fetch(`${API_URL}/photos/user/${data.user.id}`);
+      if (photosResponse.ok) {
+        const photos = await photosResponse.json();
+        setPhotoCount(photos.length);
+      }
     } catch (err) {
       console.error("Error:", err);
       setError(err.message);
@@ -112,7 +126,39 @@ function EditUser() {
     }));
   };
 
-  // Guardar cambios del perfil (nombre)
+  // Manejar clic en el botón de editar foto
+  const handleEditPhotoClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Manejar selección de archivo de imagen
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar que sea una imagen
+      if (!file.type.startsWith('image/')) {
+        setError('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('La imagen no debe superar los 5MB');
+        return;
+      }
+
+      setProfileImage(file);
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Guardar cambios del perfil (nombre y foto)
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
@@ -121,15 +167,33 @@ function EditUser() {
 
       const token = getToken();
 
+      // Si hay una nueva imagen, convertirla a base64
+      let profilePicBase64 = null;
+      if (profileImage) {
+        const reader = new FileReader();
+        profilePicBase64 = await new Promise((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(profileImage);
+        });
+      }
+
+      // Preparar datos para enviar
+      const updateData = {
+        name: formData.name,
+      };
+
+      if (profilePicBase64) {
+        updateData.profilePic = profilePicBase64;
+      }
+
       const response = await fetch(`${API_URL}/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          name: formData.name,
-        }),
+        body: JSON.stringify(updateData),
       });
 
       if (!response.ok) {
@@ -139,6 +203,7 @@ function EditUser() {
 
       const data = await response.json();
       setUserData(data.user);
+      setProfileImage(null);
       setSuccess("Cambios guardados exitosamente");
     } catch (err) {
       console.error("Error:", err);
@@ -274,7 +339,7 @@ function EditUser() {
 
       // Limpiar token y redirigir al login
       localStorage.removeItem("artemis_token");
-      window.location.href = "/login"; // Ajusta la ruta según tu app
+      window.location.href = "/login";
     } catch (err) {
       console.error("Error:", err);
       setError(err.message);
@@ -332,6 +397,15 @@ function EditUser() {
         p: 4,
       }}
     >
+      {/* Input oculto para seleccionar archivo */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        accept="image/*"
+        onChange={handleImageChange}
+      />
+
       {/* Mensajes de error y éxito */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
@@ -374,7 +448,7 @@ function EditUser() {
         >
           <Box sx={{ position: "relative", mb: 3 }}>
             <Avatar
-              src={userData.profilePic}
+              src={profileImagePreview}
               sx={{
                 width: 120,
                 height: 120,
@@ -386,6 +460,7 @@ function EditUser() {
             </Avatar>
             <IconButton
               size="small"
+              onClick={handleEditPhotoClick}
               sx={{
                 position: "absolute",
                 bottom: 8,
@@ -416,7 +491,7 @@ function EditUser() {
               fontWeight="bold"
               sx={{ color: "primary.main", lineHeight: 1 }}
             >
-              {userData.photos?.length || 0}
+              {photoCount}
             </Typography>
           </Box>
         </Box>
@@ -493,6 +568,8 @@ function EditUser() {
                   name: userData.name,
                   email: userData.email,
                 });
+                setProfileImage(null);
+                setProfileImagePreview(userData.profilePic);
                 setError(null);
                 setSuccess(null);
               }}
@@ -508,33 +585,33 @@ function EditUser() {
               {saving ? <CircularProgress size={24} /> : "Guardar cambios"}
             </Button>
           </Box>
+
+          {/* Zona de peligro */}
+          <Divider sx={{ my: 4 }} />
+          
+          <Box>
+            <Typography variant="h6" color="error" fontWeight="bold" mb={1}>
+              Zona de peligro
+            </Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Esta acción es irreversible. Se eliminarán todos tus datos y fotos permanentemente.
+            </Typography>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setShowDeleteDialog(true)}
+              sx={{
+                px: 4,
+                py: 1.2,
+                fontWeight: "bold",
+                textTransform: "none",
+              }}
+            >
+              Eliminar cuenta
+            </Button>
+          </Box>
         </Box>
       </Paper>
-
-      {/* Botón de eliminar cuenta */}
-      <Box
-        sx={{
-          mt: 5,
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <Button
-          variant="contained"
-          color="error"
-          onClick={() => setShowDeleteDialog(true)}
-          sx={{
-            px: 6,
-            py: 1.5,
-            fontSize: "1.1rem",
-            fontWeight: "bold",
-            borderRadius: 2,
-            textTransform: "none",
-          }}
-        >
-          Eliminar cuenta
-        </Button>
-      </Box>
 
       {/* Diálogo para cambiar email */}
       <Dialog
