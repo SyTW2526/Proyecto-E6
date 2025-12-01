@@ -1,9 +1,10 @@
-
 import { SunCalc } from "../three-app/suncalc.js";
 import React, { useState, useEffect } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import NextEclipseButton from "../components/next-eclipse-button/NextEclipseButton.jsx";
+import { useAppContext } from "../AppContext.jsx";
 
 import {
   Box,
@@ -46,13 +47,14 @@ const getPhaseName = (phase) => {
 };
 
 function AstronomicalEvents() {
+  const { latitudeState, longitudeState } = useAppContext();
   const [selectedDate, setSelectedDate] = useState(null);
   const [moonData, setMoonData] = useState(null);
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState([]);
 
-  const lat = 40.4168; // Madrid
-  const lon = -3.7038;
+  const lat = latitudeState || 40.4168; // Madrid por defecto
+  const lon = longitudeState || -3.7038;
 
   // Cargar fases lunares del mes
   useEffect(() => {
@@ -72,7 +74,7 @@ function AstronomicalEvents() {
         title: emoji,
         date: isoDate,
         display: "background",
-        classNames: ["moon-event"]
+        classNames: ["moon-event"],
       });
     }
 
@@ -82,23 +84,33 @@ function AstronomicalEvents() {
   const handleDateClick = (info) => {
     const dateStr = info.dateStr;
     const date = new Date(dateStr + "T12:00:00");
-    
+
     setSelectedDate(dateStr);
-    
+
     // Calcular datos de la luna usando SunCalc
     const illumination = SunCalc.getMoonIllumination(date);
     const position = SunCalc.getMoonPosition(date, lat, lon);
     const times = SunCalc.getMoonTimes(date, lat, lon);
-    
+
     const moonInfo = {
       phase: illumination.phase,
       phaseName: getPhaseName(illumination.phase),
       illumination: (illumination.fraction * 100).toFixed(1),
-      moonrise: times.rise ? times.rise.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-      moonset: times.set ? times.set.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A',
-      distance: Math.round(position.distance)
+      moonrise: times.rise
+        ? times.rise.toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "N/A",
+      moonset: times.set
+        ? times.set.toLocaleTimeString("es-ES", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "N/A",
+      distance: Math.round(position.distance),
     };
-    
+
     setMoonData(moonInfo);
     setOpen(true);
   };
@@ -109,13 +121,42 @@ function AstronomicalEvents() {
   };
 
   return (
-    <Box sx={{ p: 3, backgroundColor: "#f5f5f5", minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "flex-start" }}>
-      <Paper sx={{ p: 3, width: "100%", maxWidth: 900, borderRadius: 3, backgroundColor: "white" }} elevation={3}>
-        <Typography variant="h5" fontWeight="bold" mb={2}>
-          Calendario de Efemérides Astronómicas
-        </Typography>
+    <Box
+      sx={{
+        p: 3,
+        backgroundColor: "#f5f5f5",
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+      }}
+    >
+      <Paper
+        sx={{
+          p: 3,
+          width: "100%",
+          maxWidth: 900,
+          borderRadius: 3,
+          backgroundColor: "white",
+        }}
+        elevation={3}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Typography variant="h5" fontWeight="bold">
+            Calendario de Efemérides Astronómicas
+          </Typography>
+          <NextEclipseButton lat={lat} lng={lon} />
+        </Box>
         <Typography variant="body2" color="text.secondary" mb={3}>
-          Cada día muestra su fase lunar. Pulsa sobre cualquier día para ver información detallada.
+          Cada día muestra su fase lunar. Pulsa sobre cualquier día para ver
+          información detallada.
         </Typography>
 
         <style>
@@ -177,12 +218,20 @@ function AstronomicalEvents() {
           height="auto"
           locale="es"
           events={events}
-          headerToolbar={{ left: "prev,next today", center: "title", right: "" }}
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "",
+          }}
           dateClick={handleDateClick}
           displayEventTime={false}
         />
 
-        <Dialog open={open} onClose={handleClose} TransitionComponent={Transition}>
+        <Dialog
+          open={open}
+          onClose={handleClose}
+          TransitionComponent={Transition}
+        >
           <DialogTitle>Fase lunar del {selectedDate}</DialogTitle>
           <DialogContent
             sx={{
@@ -192,7 +241,9 @@ function AstronomicalEvents() {
           >
             {moonData ? (
               <Box sx={{ p: 1 }}>
-                <Typography variant="h3">{getPhaseEmoji(moonData.phase)}</Typography>
+                <Typography variant="h3">
+                  {getPhaseEmoji(moonData.phase)}
+                </Typography>
                 <Typography variant="h6" mb={1}>
                   {moonData.phaseName.replace(/_/g, " ")}
                 </Typography>
