@@ -287,10 +287,7 @@ async function testArtemisApp() {
 console.log('⚠️  REQUISITOS PREVIOS:');
 console.log('   1. Frontend corriendo en http://localhost:5173');
 console.log('   2. Backend corriendo en http://localhost:5000');
-console.log('   3. Usuario de prueba creado en la base de datos');
-console.log(`   4. Email: ${TEST_CREDENTIALS.email}`);
-console.log(`   5. Password: ${TEST_CREDENTIALS.password}`);
-console.log('\n⚙️  Para cambiar las credenciales, edita TEST_CREDENTIALS al inicio del archivo.\n');
+console.log('   3. Tests ejecutándose con bypass_auth=true\n');
 
 // Ejecutar los tests
 testArtemisApp();
