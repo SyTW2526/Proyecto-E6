@@ -361,11 +361,11 @@ function ThreeComponent() {
         // El eje de rotación es el vector de visión (Tierra->Luna)
         const viewAxis = vector_earth_moon.clone().negate(); // Luna->Tierra
 
-        // Crear el vector up rotado por el parallactic angle
+        // Crear el vector up rotado por el parallactic angle (NEGADO para corregir orientación)
         const baseUp = new THREE.Vector3(0, 1, 0);
         const rotatedUp = baseUp
           .clone()
-          .applyAxisAngle(viewAxis, parallacticAngle);
+          .applyAxisAngle(viewAxis, -parallacticAngle);
 
         auxCamera.up.copy(rotatedUp);
         auxCamera.lookAt(moon.position);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { SunCalc } from "../../three-app/suncalc.js";
+import * as Astronomy from "astronomy-engine";
 import {
   Dialog,
   DialogTitle,
@@ -14,142 +14,63 @@ import {
 } from "@mui/material";
 import Brightness3Icon from "@mui/icons-material/Brightness3";
 
-// Constantes astronómicas
-const SUN_RADIUS_KM = 696000;
-const MOON_RADIUS_KM = 1737.4;
-
 /**
- * Calcula si hay un eclipse solar y su porcentaje de ocultación
- * @param {Date} date - Fecha a evaluar
+ * Busca eclipses solares usando Astronomy Engine
  * @param {number} lat - Latitud del observador
  * @param {number} lng - Longitud del observador
- * @returns {Object|null} - { obscuration: number, maxObscuration: number } o null si no hay eclipse
- */
-function calculateSolarEclipse(date, lat, lng) {
-  // Obtener posiciones del Sol y la Luna
-  const sunPos = SunCalc.getPosition(date, lat, lng);
-  const moonPos = SunCalc.getMoonPosition(date, lat, lng);
-
-  // Convertir altitudes a grados (vienen en radianes)
-  const sunAltDeg = sunPos.altitude * (180 / Math.PI);
-  const moonAltDeg = moonPos.altitude * (180 / Math.PI);
-
-  // Si el Sol está por debajo del horizonte, no puede haber eclipse visible
-  if (sunAltDeg < -0.5) {
-    return null;
-  }
-
-  // Convertir azimuts a grados
-  const sunAzDeg = sunPos.azimuth * (180 / Math.PI);
-  const moonAzDeg = moonPos.azimuth * (180 / Math.PI);
-
-  // Calcular la distancia angular entre Sol y Luna en grados
-  const deltaAz = Math.abs(sunAzDeg - moonAzDeg);
-  const deltaAlt = Math.abs(sunAltDeg - moonAltDeg);
-
-  // Distancia angular aproximada entre centros
-  const angularDistance = Math.sqrt(deltaAz * deltaAz + deltaAlt * deltaAlt);
-
-  // Calcular radios angulares aparentes
-  // Distancia a la Luna en km (viene de SunCalc)
-  const moonDistKm = moonPos.distance;
-
-  // Distancia al Sol (aproximadamente constante)
-  const sunDistKm = 149597870; // 1 UA en km
-
-  // Radio angular del Sol en grados
-  const sunAngularRadiusDeg =
-    Math.atan(SUN_RADIUS_KM / sunDistKm) * (180 / Math.PI);
-
-  // Radio angular de la Luna en grados
-  const moonAngularRadiusDeg =
-    Math.atan(MOON_RADIUS_KM / moonDistKm) * (180 / Math.PI);
-
-  // Suma de los radios
-  const sumRadii = sunAngularRadiusDeg + moonAngularRadiusDeg;
-
-  // Si la distancia entre centros es mayor que la suma de radios, no hay eclipse
-  if (angularDistance > sumRadii) {
-    return null;
-  }
-
-  // Calcular el porcentaje de ocultación
-  // Usamos la fórmula del área de intersección de dos círculos
-  const r1 = moonAngularRadiusDeg; // Radio de la Luna
-  const r2 = sunAngularRadiusDeg; // Radio del Sol
-  const d = angularDistance; // Distancia entre centros
-
-  // Si la Luna está completamente dentro del Sol o viceversa
-  if (d <= Math.abs(r1 - r2)) {
-    const smallerArea = Math.PI * Math.min(r1, r2) ** 2;
-    const sunArea = Math.PI * r2 ** 2;
-    const obscuration = (smallerArea / sunArea) * 100;
-    return { obscuration, maxObscuration: obscuration };
-  }
-
-  // Calcular área de intersección usando la fórmula estándar
-  const part1 = r1 * r1 * Math.acos((d * d + r1 * r1 - r2 * r2) / (2 * d * r1));
-  const part2 = r2 * r2 * Math.acos((d * d + r2 * r2 - r1 * r1) / (2 * d * r2));
-  const part3 =
-    0.5 *
-    Math.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2));
-
-  const intersectionArea = part1 + part2 - part3;
-  const sunArea = Math.PI * r2 * r2;
-
-  const obscuration = (intersectionArea / sunArea) * 100;
-
-  return { obscuration, maxObscuration: obscuration };
-}
-
-/**
- * Busca el próximo eclipse solar en un rango de fechas
- * @param {number} lat - Latitud
- * @param {number} lng - Longitud
- * @param {Date} startDate - Fecha inicial
- * @param {number} yearsAhead - Años a buscar hacia adelante
+ * @param {Date} startDate - Fecha inicial de búsqueda
+ * @param {number} maxEclipses - Número máximo de eclipses a buscar
  * @returns {Array} - Array de eclipses encontrados
  */
-function findNextEclipses(lat, lng, startDate, yearsAhead = 200) {
+function findNextEclipses(lat, lng, startDate, maxEclipses = 50) {
+  console.log("Buscando eclipses para:", {
+    lat,
+    lng,
+    fechaInicio: startDate.toISOString(),
+  });
+
   const eclipses = [];
-  const endDate = new Date(startDate);
-  endDate.setFullYear(endDate.getFullYear() + yearsAhead);
+  const observer = new Astronomy.Observer(lat, lng, 0); // lat, lng, elevation
 
-  // Iteramos cada día
-  let currentDate = new Date(startDate);
+  // Buscar eclipses solares globales
+  let searchDate = new Astronomy.AstroTime(startDate);
 
-  while (currentDate <= endDate) {
-    // Revisamos cada hora del día para encontrar el máximo
-    let maxEclipse = null;
-    let maxDate = null;
+  for (let i = 0; i < maxEclipses; i++) {
+    try {
+      // Buscar el próximo eclipse solar global
+      const globalEclipse = Astronomy.SearchGlobalSolarEclipse(searchDate);
 
-    for (let hour = 0; hour < 24; hour++) {
-      const testDate = new Date(currentDate);
-      testDate.setHours(hour, 0, 0, 0);
+      if (!globalEclipse) break;
 
-      const eclipse = calculateSolarEclipse(testDate, lat, lng);
+      // Calcular si el eclipse es visible desde la ubicación del observador
+      const localEclipse = Astronomy.SearchLocalSolarEclipse(
+        globalEclipse.peak,
+        observer
+      );
 
-      if (eclipse && eclipse.obscuration > 0) {
-        if (!maxEclipse || eclipse.obscuration > maxEclipse.obscuration) {
-          maxEclipse = eclipse;
-          maxDate = new Date(testDate);
-        }
+      // Verificar si el eclipse es visible desde esta ubicación
+      if (localEclipse && localEclipse.kind && localEclipse.obscuration > 0) {
+        // localEclipse.peak.time es el AstroTime que contiene la fecha
+        const eclipseDate = localEclipse.peak.time.date;
+
+        eclipses.push({
+          date: eclipseDate,
+          obscuration: localEclipse.obscuration * 100, // Convertir a porcentaje
+        });
+
+        console.log("Eclipse encontrado:", {
+          fecha: eclipseDate.toISOString(),
+          obscuracion: (localEclipse.obscuration * 100).toFixed(2) + "%",
+          tipo: localEclipse.kind,
+          altitud: localEclipse.peak.altitude.toFixed(2) + "°",
+        });
       }
-    }
 
-    // Si encontramos un eclipse este día, lo agregamos
-    if (maxEclipse && maxEclipse.obscuration > 0.1) {
-      // Umbral mínimo del 0.1%
-      eclipses.push({
-        date: maxDate,
-        obscuration: maxEclipse.maxObscuration,
-      });
-
-      // Saltamos unos días para evitar detectar el mismo eclipse
-      currentDate.setDate(currentDate.getDate() + 5);
-    } else {
-      // Avanzamos un día
-      currentDate.setDate(currentDate.getDate() + 1);
+      // Avanzar la búsqueda después de este eclipse (+ 20 días para evitar duplicados)
+      searchDate = globalEclipse.peak.AddDays(20);
+    } catch (error) {
+      console.error("Error buscando eclipse:", error);
+      break;
     }
   }
 
@@ -182,11 +103,11 @@ function NextEclipseButton({ lat, lng }) {
       setTimeout(() => {
         try {
           const startDate = new Date();
-          const foundEclipses = findNextEclipses(lat, lng, startDate, 200);
+          const foundEclipses = findNextEclipses(lat, lng, startDate, 50);
 
           if (foundEclipses.length === 0) {
             setError(
-              "No se encontraron eclipses solares visibles en los próximos 200 años para esta ubicación."
+              "No se encontraron eclipses solares visibles para esta ubicación."
             );
           } else {
             setEclipses(foundEclipses);
@@ -271,10 +192,10 @@ function NextEclipseButton({ lat, lng }) {
               >
                 <CircularProgress />
                 <Typography>
-                  Calculando eclipses para los próximos 200 años...
+                  Buscando los próximos 50 eclipses solares visibles...
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Esto puede tardar unos momentos
+                  Usando cálculos astronómicos de alta precisión
                 </Typography>
               </Box>
             ) : error ? (
