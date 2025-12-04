@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { SunCalc } from "./suncalc.js";
+import * as Astronomy from "astronomy-engine";
 import { useAppContext } from "../AppContext.jsx";
 import {
   Lensflare,
@@ -331,43 +332,49 @@ function ThreeComponent() {
           new_position_moon.z
         );
 
-        // LIBRACIÓN LUNAR CORRECTA
-        // La luna SIEMPRE muestra la misma cara a la Tierra (rotación sincrónica)
+        // ROTACIÓN LUNAR CON LIBRACIÓN REAL usando Astronomy Engine
+        // Paso 1: Tidal lock básico - la luna siempre mira a la Tierra
         moon.rotation.set(0, 0, 0);
         moon.lookAt(new THREE.Vector3(0, 0, 0));
-        // NO rotamos la luna - siempre mira a la Tierra con la misma cara
+
+        // Paso 2: Calcular la libración lunar real usando Astronomy Engine
+        const astroTime = new Astronomy.AstroTime(auxiliaryDate);
+        const libration = Astronomy.Libration(astroTime);
+
+        // libration contiene:
+        // - elon: Libración en longitud (grados) - oscilación este-oeste
+        // - elat: Libración en latitud (grados) - oscilación norte-sur
+        // - mlon: Longitud selenográfica del centro del disco visible
+        // - mlat: Latitud selenográfica del centro del disco visible
+
+        // Convertir grados a radianes
+        const libLat = libration.elat * (Math.PI / 180); // Cabeceo (pitch)
+        const libLon = libration.elon * (Math.PI / 180); // Balanceo (yaw)
+
+        // Aplicar la libración en latitud (cabeceo arriba/abajo)
+        // Rotar alrededor del eje X local después del lookAt
+        moon.rotateX(libLat);
+
+        // Aplicar la libración en longitud (balanceo izquierda/derecha)
+        // Rotar alrededor del eje Y local
+        moon.rotateY(libLon);
 
         if (terrain != undefined) {
           terrain.rotation.y = Math.PI / 2;
         }
 
-        // CÁMARA AUXILIAR CON PARALLACTIC ANGLE
-        // El parallactic angle afecta CÓMO VEMOS la luna, no a la luna misma
-        const parallacticAngle = moon_position_user.parallacticAngle;
-
-        // Vector desde Tierra a Luna
+        // CÁMARA AUXILIAR - Vista simple sin parallactic angle
         let vector_earth_moon = new THREE.Vector3(0, 0, 0).sub(moon.position);
         vector_earth_moon.normalize();
 
-        // Posicionar cámara auxiliar cerca de la luna (mirando hacia la Tierra)
         let auxCamDistance = 2.5;
         var cameraPosition = moon.position
           .clone()
           .add(vector_earth_moon.clone().multiplyScalar(auxCamDistance));
         auxCamera.position.copy(cameraPosition);
 
-        // APLICAR PARALLACTIC ANGLE AL VECTOR UP DE LA CÁMARA
-        // Esto rota la vista, simulando cómo se ve la fase desde tu ubicación
-        // El eje de rotación es el vector de visión (Tierra->Luna)
-        const viewAxis = vector_earth_moon.clone().negate(); // Luna->Tierra
-
-        // Crear el vector up rotado por el parallactic angle (NEGADO para corregir orientación)
-        const baseUp = new THREE.Vector3(0, 1, 0);
-        const rotatedUp = baseUp
-          .clone()
-          .applyAxisAngle(viewAxis, -parallacticAngle);
-
-        auxCamera.up.copy(rotatedUp);
+        // Restablecer el vector up a su valor por defecto
+        auxCamera.up.set(0, 1, 0);
         auxCamera.lookAt(moon.position);
       }
 
