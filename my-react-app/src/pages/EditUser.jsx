@@ -590,12 +590,6 @@ function EditUser() {
           <Divider sx={{ my: 4 }} />
           
           <Box>
-            <Typography variant="h6" color="error" fontWeight="bold" mb={1}>
-              Zona de peligro
-            </Typography>
-            <Typography variant="body2" color="text.secondary" mb={2}>
-              Esta acción es irreversible. Se eliminarán todos tus datos y fotos permanentemente.
-            </Typography>
             <Button
               variant="contained"
               color="error"
@@ -609,6 +603,9 @@ function EditUser() {
             >
               Eliminar cuenta
             </Button>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Esta acción es irreversible. Se eliminarán todos tus datos y fotos permanentemente.
+            </Typography>
           </Box>
         </Box>
       </Paper>
