@@ -1,10 +1,44 @@
+import { useMemo } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import { CardActionArea } from "@mui/material";
+import { useAppContext } from "../../AppContext";
+import { SunCalc } from "../../three-app/suncalc";
 
 export default function SunInfoCard() {
+  const { actualDate, latitudeState, longitudeState } = useAppContext();
+
+  const sunData = useMemo(() => {
+    const date = actualDate?.toDate
+      ? actualDate.toDate()
+      : new Date(actualDate);
+    const lat = latitudeState || 40.4168;
+    const lng = longitudeState || -3.7038;
+
+    const sunPos = SunCalc.getPosition(date, lat, lng);
+    const sunTimes = SunCalc.getTimes(date, lat, lng);
+
+    const altitude = ((sunPos.altitude * 180) / Math.PI).toFixed(1);
+    const azimuth = ((sunPos.azimuth * 180) / Math.PI).toFixed(1);
+
+    const formatTime = (time) => {
+      if (!time) return "N/A";
+      return time.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
+    return {
+      altitude,
+      azimuth,
+      sunrise: formatTime(sunTimes.sunrise),
+      sunset: formatTime(sunTimes.sunset),
+    };
+  }, [actualDate, latitudeState, longitudeState]);
+
   return (
     <Card>
       <CardActionArea
@@ -43,7 +77,7 @@ export default function SunInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Alt/Az: 45º, 180º
+            Alt/Az: {sunData.altitude}°, {sunData.azimuth}°
           </Typography>
           <Typography
             variant="body1"
@@ -54,7 +88,7 @@ export default function SunInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Sunrise: 07:30 AM
+            Amanecer: {sunData.sunrise}
           </Typography>
           <Typography
             variant="body1"
@@ -65,7 +99,7 @@ export default function SunInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Sunset: 06:45 PM
+            Atardecer: {sunData.sunset}
           </Typography>
         </CardContent>
       </CardActionArea>
