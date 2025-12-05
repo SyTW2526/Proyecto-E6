@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { SunCalc } from "./suncalc.js";
+import * as Astronomy from "astronomy-engine";
 import { useAppContext } from "../AppContext.jsx";
 import {
   Lensflare,
@@ -20,7 +21,28 @@ function ThreeComponent() {
     updateLocation,
     updateSelectedDate,
     updateActualDate,
+    timeSpeed,
   } = useAppContext();
+
+  // Refs para acceder a los valores actuales dentro del loop de animación
+  const timeSpeedRef = useRef(timeSpeed);
+  const actualDateRef = useRef(actualDate);
+  const latitudeRef = useRef(latitudeState);
+  const longitudeRef = useRef(longitudeState);
+
+  // Actualizar refs cuando cambien los valores
+  useEffect(() => {
+    timeSpeedRef.current = timeSpeed;
+  }, [timeSpeed]);
+
+  useEffect(() => {
+    actualDateRef.current = actualDate;
+  }, [actualDate]);
+
+  useEffect(() => {
+    latitudeRef.current = latitudeState;
+    longitudeRef.current = longitudeState;
+  }, [latitudeState, longitudeState]);
 
   const [configOpen, setConfigOpen] = useState(false);
   const [formDate, setFormDate] = useState("");
@@ -108,15 +130,29 @@ function ThreeComponent() {
     }
   }, [actualDate, latitudeState, longitudeState]);
 
+  // Sincronizar auxiliaryDate cuando cambia actualDate y timeSpeed es 1 (parado)
   useEffect(() => {
-    // Make sure the animation uses the currently selected date
-    auxiliaryDate =
-      actualDate && actualDate.toDate
-        ? actualDate.toDate()
-        : new Date(actualDate);
+    if (timeSpeed === 1) {
+      auxiliaryDate =
+        actualDate && actualDate.toDate
+          ? actualDate.toDate()
+          : new Date(actualDate);
+    }
+  }, [actualDate]);
 
+  // Detectar cuando se detiene la animación y guardar la fecha
+  const prevTimeSpeedRef = useRef(timeSpeed);
+  useEffect(() => {
+    // Solo actualizar cuando pasa de >1 a 1 (se detiene)
+    if (prevTimeSpeedRef.current > 1 && timeSpeed === 1 && auxiliaryDate) {
+      // Actualizar actualDate con la fecha simulada cuando se detiene
+      updateActualDate(auxiliaryDate);
+    }
+    prevTimeSpeedRef.current = timeSpeed;
+  }, [timeSpeed, updateActualDate]);
+
+  useEffect(() => {
     if (!ref.current) return;
-
 
     // SCENE
     const scene = new THREE.Scene();
@@ -143,6 +179,8 @@ function ThreeComponent() {
     );
     const controls = new OrbitControls(camera, renderer.domElement);
     camera.position.set(0, 0, 20);
+    controls.minDistance = 10; // Distancia mínima de zoom (no permite acercarse más)
+    controls.maxDistance = 50; // Distancia máxima de zoom (no permite alejarse más)
     controls.update();
 
     // CAMERA LUNAR PHASE
@@ -239,7 +277,6 @@ function ThreeComponent() {
       infoTextEl.textContent = `${actualDate}, ${latitudeState}, ${longitudeState}`;
     }
 
-
     // RESIZE LISTENER
     const handleResize = () => {
       const width = ref.current.clientWidth;
@@ -251,9 +288,37 @@ function ThreeComponent() {
     window.addEventListener("resize", handleResize);
 
     // ANIMATION LOOP
+    let lastFrameTime = Date.now();
     const animate = () => {
       requestAnimationFrame(animate);
 
+      // TIME ACCELERATION - Incrementar el tiempo de forma fluida
+      const currentTimeSpeed = timeSpeedRef.current;
+      const currentActualDate = actualDateRef.current;
+      const currentLatitude = latitudeRef.current;
+      const currentLongitude = longitudeRef.current;
+
+      if (currentTimeSpeed > 1) {
+        const now = Date.now();
+        const deltaTime = now - lastFrameTime;
+        lastFrameTime = now;
+
+        // Incrementar auxiliaryDate proporcionalmente al timeSpeed
+        // deltaTime está en ms, lo multiplicamos por timeSpeed para acelerar
+        const increment = deltaTime * (currentTimeSpeed - 1);
+        auxiliaryDate = new Date(auxiliaryDate.getTime() + increment);
+      } else {
+        lastFrameTime = Date.now();
+        // Cuando timeSpeed es 1, NO actualizar constantemente
+        // auxiliaryDate solo se actualiza cuando se detiene o cuando se cambia manualmente la fecha
+      }
+
+      // Obtener posición de la luna desde la ubicación del usuario para el parallactic angle
+      var moon_position_user = SunCalc.getMoonPosition(
+        auxiliaryDate,
+        currentLatitude,
+        currentLongitude
+      );
       var moon_position = SunCalc.getMoonPosition(auxiliaryDate, 89.9999, 0);
       var new_position_moon = get_position(
         moon_position.altitude,
@@ -266,27 +331,50 @@ function ThreeComponent() {
           new_position_moon.y,
           new_position_moon.z
         );
-        // moon.rotation.y += 0.01;
+
+        // ROTACIÓN LUNAR CON LIBRACIÓN REAL usando Astronomy Engine
+        // Paso 1: Tidal lock básico - la luna siempre mira a la Tierra
+        moon.rotation.set(0, 0, 0);
         moon.lookAt(new THREE.Vector3(0, 0, 0));
-        // auxCamera.fov = 2.5;
+
+        // Paso 2: Calcular la libración lunar real usando Astronomy Engine
+        const astroTime = new Astronomy.AstroTime(auxiliaryDate);
+        const libration = Astronomy.Libration(astroTime);
+
+        // libration contiene:
+        // - elon: Libración en longitud (grados) - oscilación este-oeste
+        // - elat: Libración en latitud (grados) - oscilación norte-sur
+        // - mlon: Longitud selenográfica del centro del disco visible
+        // - mlat: Latitud selenográfica del centro del disco visible
+
+        // Convertir grados a radianes
+        const libLat = libration.elat * (Math.PI / 180); // Cabeceo (pitch)
+        const libLon = libration.elon * (Math.PI / 180); // Balanceo (yaw)
+
+        // Aplicar la libración en latitud (cabeceo arriba/abajo)
+        // Rotar alrededor del eje X local después del lookAt
+        moon.rotateX(libLat);
+
+        // Aplicar la libración en longitud (balanceo izquierda/derecha)
+        // Rotar alrededor del eje Y local
+        moon.rotateY(libLon);
 
         if (terrain != undefined) {
           terrain.rotation.y = Math.PI / 2;
         }
 
-        // PLACE AUXILIARY CAMERA
-
-        // Create vector from moon to earth by substracting positions
+        // CÁMARA AUXILIAR - Vista simple sin parallactic angle
         let vector_earth_moon = new THREE.Vector3(0, 0, 0).sub(moon.position);
-        // Normalize the vector so that it has length 1
         vector_earth_moon.normalize();
-        // Multiply the vector by a number (distancia of the aux camera to the moon)
-        vector_earth_moon.multiplyScalar(2);
-        // Calculate the new camera position
-        var cameraPosition = moon.position.clone().add(vector_earth_moon);
-        // Set the camera position
+
+        let auxCamDistance = 2.5;
+        var cameraPosition = moon.position
+          .clone()
+          .add(vector_earth_moon.clone().multiplyScalar(auxCamDistance));
         auxCamera.position.copy(cameraPosition);
 
+        // Restablecer el vector up a su valor por defecto
+        auxCamera.up.set(0, 1, 0);
         auxCamera.lookAt(moon.position);
       }
 
@@ -349,7 +437,6 @@ function ThreeComponent() {
       if (moonInfoEl) {
         moonInfoEl.textContent = `${(moonFraction * 100).toFixed(2)}%`;
       }
-
     };
     animate();
 

@@ -1,10 +1,47 @@
+import { useMemo } from "react";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import { CardActionArea } from "@mui/material";
+import { useAppContext } from "../../AppContext";
+import { SunCalc } from "../../three-app/suncalc";
 
 export default function MoonInfoCard() {
+  const { actualDate, latitudeState, longitudeState } = useAppContext();
+
+  const moonData = useMemo(() => {
+    const date = actualDate?.toDate
+      ? actualDate.toDate()
+      : new Date(actualDate);
+    const lat = latitudeState || 40.4168;
+    const lng = longitudeState || -3.7038;
+
+    const moonPos = SunCalc.getMoonPosition(date, lat, lng);
+    const moonTimes = SunCalc.getMoonTimes(date, lat, lng);
+    const moonIllum = SunCalc.getMoonIllumination(date);
+
+    const altitude = ((moonPos.altitude * 180) / Math.PI).toFixed(1);
+    const azimuth = ((moonPos.azimuth * 180) / Math.PI).toFixed(1);
+    const phase = (moonIllum.fraction * 100).toFixed(0);
+
+    const formatTime = (time) => {
+      if (!time) return "N/A";
+      return time.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    };
+
+    return {
+      altitude,
+      azimuth,
+      phase,
+      moonrise: formatTime(moonTimes.rise),
+      moonset: formatTime(moonTimes.set),
+    };
+  }, [actualDate, latitudeState, longitudeState]);
+
   return (
     <Card>
       <CardActionArea
@@ -43,7 +80,7 @@ export default function MoonInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Alt/Az: 30º, 120º
+            Alt/Az: {moonData.altitude}°, {moonData.azimuth}°
           </Typography>
           <Typography
             variant="body1"
@@ -54,7 +91,7 @@ export default function MoonInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Moonrise: 08:15 PM
+            Salida: {moonData.moonrise}
           </Typography>
           <Typography
             variant="body1"
@@ -65,7 +102,7 @@ export default function MoonInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Moonset: 09:30 AM
+            Puesta: {moonData.moonset}
           </Typography>
         </CardContent>
       </CardActionArea>
