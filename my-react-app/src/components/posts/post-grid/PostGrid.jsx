@@ -282,7 +282,10 @@ function PostGrid({ posts, onDelete }) {
             {selectedPost?.comments && selectedPost.comments.length > 0 ? (
               selectedPost.comments.map((comment, index) => (
                 <ListItem key={comment._id || index} alignItems="flex-start" sx={{ px: 0 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                  <Avatar 
+                    src={comment.userProfilePic}
+                    sx={{ mr: 2, bgcolor: 'primary.main' }}
+                  >
                     {(comment.userName || 'U').charAt(0).toUpperCase()}
                   </Avatar>
                   <ListItemText
@@ -327,7 +330,10 @@ function PostGrid({ posts, onDelete }) {
           {/* Add Comment */}
           {currentUser && (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', mt: 1 }}>
+              <Avatar 
+                src={currentUser.profilePic}
+                sx={{ bgcolor: 'primary.main', mt: 1 }}
+              >
                 {currentUser.name.charAt(0).toUpperCase()}
               </Avatar>
               <TextField

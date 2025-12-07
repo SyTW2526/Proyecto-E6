@@ -27,6 +27,7 @@ const postSchema = new mongoose.Schema({
   comments: [{
     userId: String,
     userName: String,
+    userProfilePic: String,
     text: String,
     date: {
       type: Date,
