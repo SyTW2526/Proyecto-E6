@@ -65,7 +65,7 @@ function Community() {
                 const photoDescription = String(photo.description || '').toLowerCase();
                 const camera = String(photo.metadata?.camera || '').toLowerCase();
                 const lens = String(photo.metadata?.lens || '').toLowerCase();
-                const location = String(photo.location || '').toLowerCase();
+                const location = String(photo.location?.name || '').toLowerCase();
                 const moonPhase = String(photo.moonPhase || '').toLowerCase();
                 
                 return photoTitle.includes(query) ||
@@ -149,7 +149,7 @@ function Community() {
       <Box sx={{ px: 3, maxWidth: 600, mx: 'auto', mb: 3 }}>
         <TextField
           fullWidth
-          placeholder="Buscar por nombre de usuario, título o descripción..."
+          placeholder="Search by username, title, or description..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{
@@ -183,7 +183,7 @@ function Community() {
               }
             }}
           >
-            Más Populares
+            Most Popular
           </Button>
           <Button
             startIcon={<AccessTimeIcon />}
@@ -197,7 +197,7 @@ function Community() {
               }
             }}
           >
-            Más Recientes
+            Most Recent
           </Button>
         </ButtonGroup>
       </Box>
@@ -218,7 +218,7 @@ function Community() {
                 color: 'text.secondary'
               }}
             >
-              Cargando posts...
+               Loading posts...
             </Typography>
           </Box>
         ) : (

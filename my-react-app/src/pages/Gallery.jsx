@@ -93,7 +93,7 @@ function Gallery() {
                 color: 'text.secondary'
               }}
             >
-              Cargando imágenes...
+              Loading images...
             </Typography>
           </Box>
         ) : (
