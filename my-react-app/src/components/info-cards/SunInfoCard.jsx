@@ -88,7 +88,7 @@ export default function SunInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Amanecer: {sunData.sunrise}
+            Sunrise: {sunData.sunrise}
           </Typography>
           <Typography
             variant="body1"
@@ -99,7 +99,7 @@ export default function SunInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Atardecer: {sunData.sunset}
+            Sunset: {sunData.sunset}
           </Typography>
         </CardContent>
       </CardActionArea>

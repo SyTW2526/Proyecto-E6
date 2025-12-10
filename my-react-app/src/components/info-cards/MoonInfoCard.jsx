@@ -91,7 +91,7 @@ export default function MoonInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Salida: {moonData.moonrise}
+            Rise: {moonData.moonrise}
           </Typography>
           <Typography
             variant="body1"
@@ -102,7 +102,7 @@ export default function MoonInfoCard() {
               textOverflow: "ellipsis",
             }}
           >
-            Puesta: {moonData.moonset}
+            Set: {moonData.moonset}
           </Typography>
         </CardContent>
       </CardActionArea>

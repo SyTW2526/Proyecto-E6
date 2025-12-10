@@ -1,13 +1,13 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 
-function ConfigMenu({ 
-  actualDate, 
-  latitudeState, 
+function ConfigMenu({
+  actualDate,
+  latitudeState,
   longitudeState,
   updateLocation,
   updateSelectedDate,
-  updateActualDate 
+  updateActualDate,
 }) {
   const [configOpen, setConfigOpen] = useState(false);
   const [formDate, setFormDate] = useState("");
@@ -37,7 +37,7 @@ function ConfigMenu({
   const openConfig = () => {
     let useLat = latitudeState;
     let useLng = longitudeState;
-    
+
     // Skip permissions check for simplicity in testing
     setFormDate(dateForInput(actualDate));
     setFormTime(timeForInput(actualDate));
@@ -78,8 +78,8 @@ function ConfigMenu({
       {/* Config button in top-right */}
       <button
         onClick={toggleConfig}
-        title="Configuración"
-        aria-label="Abrir configuración"
+        title="Configuration"
+        aria-label="Open configuration"
         style={{
           position: "absolute",
           top: "12px",
@@ -134,12 +134,17 @@ function ConfigMenu({
           }}
         >
           <div style={{ marginBottom: "8px", fontWeight: "600" }}>
-            Configuración
+            Configuration
           </div>
           <div style={{ marginBottom: "6px" }}>
-            <label htmlFor="config-fecha" style={{ display: "block", fontSize: "12px" }}>Fecha</label>
+            <label
+              htmlFor="config-date"
+              style={{ display: "block", fontSize: "12px" }}
+            >
+              Date
+            </label>
             <input
-              id="config-fecha"
+              id="config-date"
               type="date"
               value={formDate}
               onChange={(e) => setFormDate(e.target.value)}
@@ -147,9 +152,14 @@ function ConfigMenu({
             />
           </div>
           <div style={{ marginBottom: "6px" }}>
-            <label htmlFor="config-hora" style={{ display: "block", fontSize: "12px" }}>Hora</label>
+            <label
+              htmlFor="config-time"
+              style={{ display: "block", fontSize: "12px" }}
+            >
+              Time
+            </label>
             <input
-              id="config-hora"
+              id="config-time"
               type="time"
               value={formTime}
               onChange={(e) => setFormTime(e.target.value)}
@@ -158,8 +168,11 @@ function ConfigMenu({
           </div>
           <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
             <div style={{ flex: 1 }}>
-              <label htmlFor="config-lat" style={{ display: "block", fontSize: "12px" }}>
-                Latitud
+              <label
+                htmlFor="config-lat"
+                style={{ display: "block", fontSize: "12px" }}
+              >
+                Latitude
               </label>
               <input
                 id="config-lat"
@@ -171,8 +184,11 @@ function ConfigMenu({
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label htmlFor="config-lng" style={{ display: "block", fontSize: "12px" }}>
-                Longitud
+              <label
+                htmlFor="config-lng"
+                style={{ display: "block", fontSize: "12px" }}
+              >
+                Longitude
               </label>
               <input
                 id="config-lng"
@@ -198,7 +214,7 @@ function ConfigMenu({
                 cursor: "pointer",
               }}
             >
-              Cancelar
+              Cancel
             </button>
             <button
               onClick={handleSave}
@@ -211,7 +227,7 @@ function ConfigMenu({
                 cursor: "pointer",
               }}
             >
-              Guardar
+              Save
             </button>
           </div>
         </div>
@@ -221,7 +237,10 @@ function ConfigMenu({
 }
 
 ConfigMenu.propTypes = {
-  actualDate: PropTypes.oneOfType([PropTypes.object, PropTypes.instanceOf(Date)]).isRequired,
+  actualDate: PropTypes.oneOfType([
+    PropTypes.object,
+    PropTypes.instanceOf(Date),
+  ]).isRequired,
   latitudeState: PropTypes.number.isRequired,
   longitudeState: PropTypes.number.isRequired,
   updateLocation: PropTypes.func.isRequired,

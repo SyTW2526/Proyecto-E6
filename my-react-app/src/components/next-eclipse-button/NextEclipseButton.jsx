@@ -23,10 +23,10 @@ import Brightness3Icon from "@mui/icons-material/Brightness3";
  * @returns {Array} - Array de eclipses encontrados
  */
 function findNextEclipses(lat, lng, startDate, maxEclipses = 50) {
-  console.log("Buscando eclipses para:", {
+  console.log("Searching eclipses for:", {
     lat,
     lng,
-    fechaInicio: startDate.toISOString(),
+    startDate: startDate.toISOString(),
   });
 
   const eclipses = [];
@@ -58,11 +58,11 @@ function findNextEclipses(lat, lng, startDate, maxEclipses = 50) {
           obscuration: localEclipse.obscuration * 100, // Convertir a porcentaje
         });
 
-        console.log("Eclipse encontrado:", {
-          fecha: eclipseDate.toISOString(),
-          obscuracion: (localEclipse.obscuration * 100).toFixed(2) + "%",
-          tipo: localEclipse.kind,
-          altitud: localEclipse.peak.altitude.toFixed(2) + "°",
+        console.log("Eclipse found:", {
+          date: eclipseDate.toISOString(),
+          obscuration: (localEclipse.obscuration * 100).toFixed(2) + "%",
+          type: localEclipse.kind,
+          altitude: localEclipse.peak.altitude.toFixed(2) + "°",
         });
       }
 
@@ -106,30 +106,39 @@ function NextEclipseButton({ lat, lng }) {
           const foundEclipses = findNextEclipses(lat, lng, startDate, 50);
 
           if (foundEclipses.length === 0) {
-            setError(
-              "No se encontraron eclipses solares visibles para esta ubicación."
-            );
+            setError("No visible solar eclipses found for this location.");
           } else {
-            setEclipses(foundEclipses);
+            // Filter duplicates by date (same day)
+            const uniqueEclipses = foundEclipses.filter(
+              (eclipse, index, self) => {
+                return (
+                  index ===
+                  self.findIndex((e) => {
+                    const date1 = new Date(eclipse.date).toDateString();
+                    const date2 = new Date(e.date).toDateString();
+                    return date1 === date2;
+                  })
+                );
+              }
+            );
+            setEclipses(uniqueEclipses);
           }
         } catch (err) {
-          console.error("Error calculando eclipses:", err);
-          setError(
-            "Error al calcular los eclipses. Por favor, inténtelo de nuevo."
-          );
+          console.error("Error calculating eclipses:", err);
+          setError("Error calculating eclipses. Please try again.");
         } finally {
           setIsCalculating(false);
         }
       }, 100);
     } catch (err) {
       console.error("Error:", err);
-      setError("Error al iniciar el cálculo.");
+      setError("Error starting calculation.");
       setIsCalculating(false);
     }
   };
 
   const formatDate = (date) => {
-    return date.toLocaleString("es-ES", {
+    return date.toLocaleString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -175,7 +184,7 @@ function NextEclipseButton({ lat, lng }) {
         aria-labelledby="eclipse-dialog-title"
       >
         <DialogTitle id="eclipse-dialog-title">
-          Próximos Eclipses Solares
+          Upcoming Solar Eclipses
         </DialogTitle>
         <DialogContent>
           <Box sx={{ minHeight: "200px" }}>
@@ -192,10 +201,10 @@ function NextEclipseButton({ lat, lng }) {
               >
                 <CircularProgress />
                 <Typography>
-                  Buscando los próximos 50 eclipses solares visibles...
+                  Searching for the next 50 visible solar eclipses...
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Usando cálculos astronómicos de alta precisión
+                  Using high-precision astronomical calculations
                 </Typography>
               </Box>
             ) : error ? (
@@ -207,11 +216,11 @@ function NextEclipseButton({ lat, lng }) {
                   color="text.secondary"
                   sx={{ mb: 2 }}
                 >
-                  Ubicación: Lat {lat.toFixed(4)}°, Lng {lng.toFixed(4)}°
+                  Location: Lat {lat.toFixed(4)}°, Lng {lng.toFixed(4)}°
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 3 }}>
-                  Se encontraron <strong>{eclipses.length}</strong> eclipses
-                  solares visibles:
+                  Found <strong>{eclipses.length}</strong> visible solar
+                  eclipses:
                 </Typography>
                 <Box
                   sx={{
@@ -236,14 +245,14 @@ function NextEclipseButton({ lat, lng }) {
                     >
                       <Typography variant="h6" sx={{ mb: 1 }}>
                         {index === 0
-                          ? "🌟 Próximo Eclipse"
+                          ? "🌟 Next Eclipse"
                           : `Eclipse #${index + 1}`}
                       </Typography>
                       <Typography variant="body1">
-                        <strong>Fecha:</strong> {formatDate(eclipse.date)}
+                        <strong>Date:</strong> {formatDate(eclipse.date)}
                       </Typography>
                       <Typography variant="body1">
-                        <strong>Ocultación máxima:</strong>{" "}
+                        <strong>Maximum obscuration:</strong>{" "}
                         {eclipse.obscuration.toFixed(2)}%
                       </Typography>
                     </Box>
@@ -251,15 +260,13 @@ function NextEclipseButton({ lat, lng }) {
                 </Box>
               </Box>
             ) : (
-              <Typography>
-                Haga clic en "Calcular" para buscar eclipses.
-              </Typography>
+              <Typography>Click to search for eclipses.</Typography>
             )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary">
-            Cerrar
+            Close
           </Button>
         </DialogActions>
       </Dialog>
