@@ -457,8 +457,8 @@ function ThreeComponent() {
       {/* Config button in top-right */}
       <button
         onClick={toggleConfig}
-        title="Configuración"
-        aria-label="Abrir configuración"
+        title="Configuration"
+        aria-label="Open configuration"
         style={{
           position: "absolute",
           top: "12px",
@@ -516,10 +516,10 @@ function ThreeComponent() {
           }}
         >
           <div style={{ marginBottom: "8px", fontWeight: "600" }}>
-            Configuración
+            Configuration
           </div>
           <div style={{ marginBottom: "6px" }}>
-            <label style={{ display: "block", fontSize: "12px" }}>Fecha</label>
+            <label style={{ display: "block", fontSize: "12px" }}>Date</label>
             <input
               type="date"
               value={formDate}
@@ -528,7 +528,7 @@ function ThreeComponent() {
             />
           </div>
           <div style={{ marginBottom: "6px" }}>
-            <label style={{ display: "block", fontSize: "12px" }}>Hora</label>
+            <label style={{ display: "block", fontSize: "12px" }}>Time</label>
             <input
               type="time"
               value={formTime}
@@ -539,7 +539,7 @@ function ThreeComponent() {
           <div style={{ display: "flex", gap: "8px", marginBottom: "6px" }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: "block", fontSize: "12px" }}>
-                Latitud
+                Latitude
               </label>
               <input
                 type="number"
@@ -551,7 +551,7 @@ function ThreeComponent() {
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ display: "block", fontSize: "12px" }}>
-                Longitud
+                Longitude
               </label>
               <input
                 type="number"
@@ -576,7 +576,7 @@ function ThreeComponent() {
                 cursor: "pointer",
               }}
             >
-              Cancelar
+              Cancel
             </button>
             <button
               onClick={handleSave}
@@ -589,7 +589,7 @@ function ThreeComponent() {
                 cursor: "pointer",
               }}
             >
-              Guardar
+              Save
             </button>
           </div>
         </div>

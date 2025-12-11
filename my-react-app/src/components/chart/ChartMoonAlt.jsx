@@ -1,44 +1,105 @@
-import { LineChart } from "@mui/x-charts/LineChart";
+import { useMemo } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+  Dot,
+} from "recharts";
+import { useAppContext } from "../../AppContext";
+import { SunCalc } from "../../three-app/suncalc";
 
 export default function ChartMoonAlt() {
-  // Datos de ejemplo para prototipo (curva simulada de altitud lunar)
-  const moonAltitudeData = [
-    -20, -15, -10, -5, 0, 10, 20, 30, 40, 45, 50, 55, 60, 55, 50, 45, 40, 30,
-    20, 10, 0, -5, -10, -15,
-  ];
+  const { latitudeState, longitudeState, actualDate } = useAppContext();
 
-  const currentHour = 12; // Hora actual de ejemplo
+  const chartData = useMemo(() => {
+    const date =
+      actualDate && actualDate.toDate
+        ? actualDate.toDate()
+        : new Date(actualDate);
+    const lat = latitudeState || 28.4636;
+    const lng = longitudeState || -16.2518;
+
+    const baseDate = new Date(date);
+    baseDate.setHours(0, 0, 0, 0);
+
+    const data = [];
+    for (let hour = 0; hour < 24; hour++) {
+      const hourDate = new Date(baseDate);
+      hourDate.setHours(hour);
+      const position = SunCalc.getMoonPosition(hourDate, lat, lng);
+      const altitudeDeg = (position.altitude * 180) / Math.PI;
+
+      data.push({
+        hour: hour,
+        altitude: parseFloat(altitudeDeg.toFixed(2)),
+        isCurrent: hour === date.getHours(),
+      });
+    }
+
+    return data;
+  }, [latitudeState, longitudeState, actualDate]);
+
+  const CustomDot = (props) => {
+    const { cx, cy, payload } = props;
+    if (payload.isCurrent) {
+      return (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={6}
+          fill="#fff"
+          stroke="#000"
+          strokeWidth={2}
+        />
+      );
+    }
+    return null;
+  };
 
   return (
-    <LineChart
-      xAxis={[
-        {
-          data: Array.from({ length: 24 }, (_, i) => i + 1),
-          label: "time (HH)",
-        },
-      ]}
-      series={[
-        {
-          data: moonAltitudeData,
-          label: "Moon altitude (º)",
-          color: "#af7aa1",
-          showMark: false,
-        },
-        {
-          data: Array.from({ length: 24 }, () => 0),
-          color: "red",
-          showMark: false,
-        },
-        {
-          data: Array.from({ length: 24 }, (v, i) =>
-            i === currentHour - 1 ? moonAltitudeData[i] : null
-          ),
-          color: "black",
-        },
-      ]}
-      height={200}
-      margin={{ left: 30, right: 30, top: 30, bottom: 40 }}
-      grid={{ vertical: true, horizontal: true }}
-    />
+    <ResponsiveContainer width="100%" height={200}>
+      <LineChart
+        data={chartData}
+        margin={{ top: 10, right: 20, left: 0, bottom: 20 }}
+      >
+        <CartesianGrid strokeDasharray="3 3" stroke="#333" opacity={0.3} />
+        <XAxis
+          dataKey="hour"
+          label={{ value: "Time (HH)", position: "insideBottom", offset: -10 }}
+          stroke="#ccc"
+          tick={{ fill: "#ccc" }}
+        />
+        <YAxis
+          label={{ value: "Altitude (°)", angle: -90, position: "insideLeft" }}
+          stroke="#ccc"
+          tick={{ fill: "#ccc" }}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "rgba(0,0,0,0.8)",
+            border: "1px solid #555",
+            borderRadius: "4px",
+          }}
+          labelStyle={{ color: "#fff" }}
+          itemStyle={{ color: "#af7aa1" }}
+          formatter={(value) => [`${value}°`, "Moon Altitude"]}
+          labelFormatter={(label) => `Hour: ${label}:00`}
+        />
+        <ReferenceLine y={0} stroke="red" strokeDasharray="3 3" />
+        <Line
+          type="monotone"
+          dataKey="altitude"
+          stroke="#af7aa1"
+          strokeWidth={2}
+          dot={<CustomDot />}
+          activeDot={{ r: 5 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
   );
 }
