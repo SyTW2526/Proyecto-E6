@@ -430,6 +430,7 @@ export function AppProvider({ children }) {
         postId,
         currentUser.id,
         currentUser.name,
+        currentUser.profilePic,
         commentText
       );
       setPosts(
