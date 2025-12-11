@@ -56,16 +56,17 @@ function AstronomicalEvents() {
   const lat = latitudeState || 40.4168; // Madrid por defecto
   const lon = longitudeState || -3.7038;
 
-  // Cargar fases lunares del mes
+  // Cargar fases lunares de los próximos 365 días
   useEffect(() => {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
     const moonEvents = [];
 
-    for (let i = 1; i <= daysInMonth; i++) {
-      const date = new Date(year, month, i, 12, 0, 0);
+    // Generar eventos para los próximos 365 días desde hoy
+    for (let i = 0; i < 365; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      date.setHours(12, 0, 0, 0);
+      
       const isoDate = date.toISOString().split("T")[0];
       const illumination = SunCalc.getMoonIllumination(date);
       const emoji = getPhaseEmoji(illumination.phase);
