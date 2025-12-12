@@ -22,36 +22,36 @@ describe('ConfigMenu (Three.js Configuration Menu)', () => {
 
   it('renders the configuration button', () => {
     render(<ConfigMenu {...defaultProps} />);
-    const configButton = screen.getByTitle('Configuración');
+    const configButton = screen.getByTitle('Configuration');
     expect(configButton).toBeInTheDocument();
   });
 
   it('opens the configuration menu when button is clicked', () => {
     render(<ConfigMenu {...defaultProps} />);
-    const configButton = screen.getByTitle('Configuración');
+    const configButton = screen.getByTitle('Configuration');
     
     fireEvent.click(configButton);
     
-    expect(screen.getByText('Configuración')).toBeInTheDocument();
-    expect(screen.getByLabelText('Fecha')).toBeInTheDocument();
-    expect(screen.getByLabelText('Hora')).toBeInTheDocument();
-    expect(screen.getByLabelText('Latitud')).toBeInTheDocument();
-    expect(screen.getByLabelText('Longitud')).toBeInTheDocument();
+    expect(screen.getByText('Configuration')).toBeInTheDocument();
+    expect(screen.getByLabelText('Date')).toBeInTheDocument();
+    expect(screen.getByLabelText('Time')).toBeInTheDocument();
+    expect(screen.getByLabelText('Latitude')).toBeInTheDocument();
+    expect(screen.getByLabelText('Longitude')).toBeInTheDocument();
   });
 
-  it('updates context when "Guardar" is clicked', async () => {
+  it('updates context when "Save" is clicked', async () => {
     render(<ConfigMenu {...defaultProps} />);
-    const configButton = screen.getByTitle('Configuración');
+    const configButton = screen.getByTitle('Configuration');
     fireEvent.click(configButton);
     
     // Wait for the menu to open and populate fields
-    const latInput = await screen.findByLabelText('Latitud');
-    const lngInput = await screen.findByLabelText('Longitud');
+    const latInput = await screen.findByLabelText('Latitude');
+    const lngInput = await screen.findByLabelText('Longitude');
     
     fireEvent.change(latInput, { target: { value: '50.0' } });
     fireEvent.change(lngInput, { target: { value: '10.0' } });
     
-    const saveButton = screen.getByText('Guardar');
+    const saveButton = screen.getByText('Save');
     fireEvent.click(saveButton);
     
     expect(mockUpdateLocation).toHaveBeenCalledWith({ lat: 50.0, lng: 10.0 });
@@ -59,28 +59,28 @@ describe('ConfigMenu (Three.js Configuration Menu)', () => {
     expect(mockUpdateActualDate).toHaveBeenCalled();
   });
 
-  it('closes the menu when "Cancelar" is clicked', async () => {
+  it('closes the menu when "Cancel" is clicked', async () => {
     render(<ConfigMenu {...defaultProps} />);
-    const configButton = screen.getByTitle('Configuración');
+    const configButton = screen.getByTitle('Configuration');
     fireEvent.click(configButton);
     
     // Wait for menu to open
-    await screen.findByText('Configuración');
+    await screen.findByText('Configuration');
     
-    const cancelButton = screen.getByText('Cancelar');
+    const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
     
-    expect(screen.queryByText('Configuración')).not.toBeInTheDocument();
+    expect(screen.queryByText('Configuration')).not.toBeInTheDocument();
   });
 
   it('populates form fields with current values when opened', async () => {
     render(<ConfigMenu {...defaultProps} />);
-    const configButton = screen.getByTitle('Configuración');
+    const configButton = screen.getByTitle('Configuration');
     fireEvent.click(configButton);
     
     // Wait for fields to be populated
-    const latInput = await screen.findByLabelText('Latitud');
-    const lngInput = await screen.findByLabelText('Longitud');
+    const latInput = await screen.findByLabelText('Latitude');
+    const lngInput = await screen.findByLabelText('Longitude');
     
     expect(latInput).toHaveValue(40.4168);
     expect(lngInput).toHaveValue(-3.7038);

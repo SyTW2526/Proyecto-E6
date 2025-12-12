@@ -35,15 +35,15 @@ const getPhaseEmoji = (phase) => {
 };
 
 const getPhaseName = (phase) => {
-  if (phase < 0.03) return "LUNA NUEVA";
-  if (phase < 0.22) return "CRECIENTE";
-  if (phase < 0.28) return "CUARTO CRECIENTE";
-  if (phase < 0.47) return "GIBOSA CRECIENTE";
-  if (phase < 0.53) return "LUNA LLENA";
-  if (phase < 0.72) return "GIBOSA MENGUANTE";
-  if (phase < 0.78) return "CUARTO MENGUANTE";
-  if (phase < 0.97) return "MENGUANTE";
-  return "LUNA NUEVA";
+  if (phase < 0.03) return "NEW MOON";
+  if (phase < 0.22) return "WAXING CRESCENT";
+  if (phase < 0.28) return "FIRST QUARTER";
+  if (phase < 0.47) return "WAXING GIBBOUS";
+  if (phase < 0.53) return "FULL MOON";
+  if (phase < 0.72) return "WANING GIBBOUS";
+  if (phase < 0.78) return "LAST QUARTER";
+  if (phase < 0.97) return "WANING CRESCENT";
+  return "NEW MOON";
 };
 
 function AstronomicalEvents() {
@@ -53,10 +53,10 @@ function AstronomicalEvents() {
   const [open, setOpen] = useState(false);
   const [events, setEvents] = useState([]);
 
-  const lat = latitudeState || 40.4168; // Madrid por defecto
+  const lat = latitudeState || 40.4168; // Madrid by default
   const lon = longitudeState || -3.7038;
 
-  // Cargar fases lunares del mes
+  // Load monthly moon phases
   useEffect(() => {
     const today = new Date();
     const year = today.getFullYear();
@@ -87,7 +87,7 @@ function AstronomicalEvents() {
 
     setSelectedDate(dateStr);
 
-    // Calcular datos de la luna usando SunCalc
+    // Calculate moon data using SunCalc
     const illumination = SunCalc.getMoonIllumination(date);
     const position = SunCalc.getMoonPosition(date, lat, lon);
     const times = SunCalc.getMoonTimes(date, lat, lon);
@@ -97,13 +97,13 @@ function AstronomicalEvents() {
       phaseName: getPhaseName(illumination.phase),
       illumination: (illumination.fraction * 100).toFixed(1),
       moonrise: times.rise
-        ? times.rise.toLocaleTimeString("es-ES", {
+        ? times.rise.toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })
         : "N/A",
       moonset: times.set
-        ? times.set.toLocaleTimeString("es-ES", {
+        ? times.set.toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
           })
@@ -150,18 +150,17 @@ function AstronomicalEvents() {
           }}
         >
           <Typography variant="h5" fontWeight="bold">
-            Calendario de Efemérides Astronómicas
+            Astronomical Events Calendar
           </Typography>
           <NextEclipseButton lat={lat} lng={lon} />
         </Box>
         <Typography variant="body2" color="text.secondary" mb={3}>
-          Cada día muestra su fase lunar. Pulsa sobre cualquier día para ver
-          información detallada.
+          Each day shows its moon phase. Click on any day to see detailed information.
         </Typography>
 
         <style>
           {`
-            /* Efecto hover para los días del calendario */
+            /* Hover effect for calendar days */
             .fc-daygrid-day:hover {
               background-color: #e3f2fd !important;
               cursor: pointer;
@@ -180,7 +179,7 @@ function AstronomicalEvents() {
               position: relative;
             }
 
-            /* Estilo para los emojis de luna en la esquina superior izquierda */
+            /* Style for moon emojis in top left corner */
             .fc-bg-event.moon-event {
               background: transparent !important;
               border: none !important;
@@ -199,12 +198,12 @@ function AstronomicalEvents() {
               filter: none !important;
             }
 
-            /* Forzar opacidad completa en todos los elementos del evento */
+            /* Force full opacity on all event elements */
             .fc-bg-event.moon-event * {
               opacity: 1 !important;
             }
 
-            /* Asegurar que el número del día esté visible */
+            /* Ensure day number is visible */
             .fc-daygrid-day-top {
               position: relative;
               z-index: 2;
@@ -216,7 +215,7 @@ function AstronomicalEvents() {
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           height="auto"
-          locale="es"
+          locale="en"
           events={events}
           headerToolbar={{
             left: "prev,next today",
@@ -232,7 +231,7 @@ function AstronomicalEvents() {
           onClose={handleClose}
           TransitionComponent={Transition}
         >
-          <DialogTitle>Fase lunar del {selectedDate}</DialogTitle>
+          <DialogTitle>Moon Phase for {selectedDate}</DialogTitle>
           <DialogContent
             sx={{
               backgroundColor: "white",
@@ -248,16 +247,16 @@ function AstronomicalEvents() {
                   {moonData.phaseName.replace(/_/g, " ")}
                 </Typography>
                 <Typography>
-                  <strong>Salida de la luna:</strong> {moonData.moonrise}
+                  <strong>Moonrise:</strong> {moonData.moonrise}
                 </Typography>
                 <Typography>
-                  <strong>Puesta de la luna:</strong> {moonData.moonset}
+                  <strong>Moonset:</strong> {moonData.moonset}
                 </Typography>
                 <Typography>
-                  <strong>Distancia:</strong> {moonData.distance} km
+                  <strong>Distance:</strong> {moonData.distance} km
                 </Typography>
                 <Typography sx={{ mt: 1 }}>
-                  <strong>Iluminación:</strong> {moonData.illumination}%
+                  <strong>Illumination:</strong> {moonData.illumination}%
                 </Typography>
                 <LinearProgress
                   variant="determinate"
@@ -266,7 +265,7 @@ function AstronomicalEvents() {
                 />
               </Box>
             ) : (
-              <Typography>No hay datos disponibles para esta fecha.</Typography>
+              <Typography>No data available for this date.</Typography>
             )}
           </DialogContent>
         </Dialog>

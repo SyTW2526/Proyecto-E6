@@ -23,28 +23,28 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 const API_URL = "http://localhost:5000/api";
 
 function EditUser() {
-  // Estado para los datos del usuario
+  // State for user data
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Estado para el formulario
+  // State for form
   const [formData, setFormData] = useState({
     name: "",
     email: "",
   });
 
-  // Estado para mostrar/ocultar contraseña
+  // State to show/hide password
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estado para diálogos de confirmación
+  // State for confirmation dialogs
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showChangeEmailDialog, setShowChangeEmailDialog] = useState(false);
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
 
-  // Estado para cambios de email y contraseña
+  // State for email and password changes
   const [emailData, setEmailData] = useState({
     newEmail: "",
     password: "",
@@ -56,17 +56,17 @@ function EditUser() {
   });
   const [deletePassword, setDeletePassword] = useState("");
 
-  // Obtener token del localStorage
+  // Get token from localStorage
   const getToken = () => {
-    return localStorage.getItem("artemis_token"); // Mismo nombre que en Login
+    return localStorage.getItem("artemis_token"); // Same name as in Login
   };
 
-  // Cargar datos del usuario al montar el componente
+  // Load user data on component mount
   useEffect(() => {
     fetchUserData();
   }, []);
 
-  // Función para obtener datos del usuario
+  // Function to fetch user data
   const fetchUserData = async () => {
     try {
       setLoading(true);
@@ -74,7 +74,7 @@ function EditUser() {
 
       const token = getToken();
       if (!token) {
-        setError("No hay sesión activa. Por favor, inicia sesión.");
+        setError("No active session. Please log in.");
         setLoading(false);
         return;
       }
@@ -86,7 +86,7 @@ function EditUser() {
       });
 
       if (!response.ok) {
-        throw new Error("Error al cargar datos del usuario");
+        throw new Error("Error loading user data");
       }
 
       const data = await response.json();
@@ -103,7 +103,7 @@ function EditUser() {
     }
   };
 
-  // Manejar cambios en el formulario principal
+  // Handle changes in main form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -112,7 +112,7 @@ function EditUser() {
     }));
   };
 
-  // Guardar cambios del perfil (nombre)
+  // Save profile changes (name)
   const handleSaveChanges = async () => {
     try {
       setSaving(true);
@@ -134,12 +134,12 @@ function EditUser() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al guardar cambios");
+        throw new Error(errorData.error || "Error saving changes");
       }
 
       const data = await response.json();
       setUserData(data.user);
-      setSuccess("Cambios guardados exitosamente");
+      setSuccess("Changes saved successfully");
     } catch (err) {
       console.error("Error:", err);
       setError(err.message);
@@ -148,11 +148,11 @@ function EditUser() {
     }
   };
 
-  // Cambiar email
+  // Change email
   const handleChangeEmail = async () => {
     try {
       if (!emailData.newEmail || !emailData.password) {
-        setError("Por favor completa todos los campos");
+        setError("Please fill in all fields");
         return;
       }
 
@@ -172,13 +172,13 @@ function EditUser() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al cambiar email");
+        throw new Error(errorData.error || "Error changing email");
       }
 
       const data = await response.json();
       setUserData(data.user);
       setFormData((prev) => ({ ...prev, email: data.user.email }));
-      setSuccess("Email cambiado exitosamente");
+      setSuccess("Email changed successfully");
       setShowChangeEmailDialog(false);
       setEmailData({ newEmail: "", password: "" });
     } catch (err) {
@@ -189,7 +189,7 @@ function EditUser() {
     }
   };
 
-  // Cambiar contraseña
+  // Change password
   const handleChangePassword = async () => {
     try {
       if (
@@ -197,12 +197,12 @@ function EditUser() {
         !passwordData.newPassword ||
         !passwordData.confirmPassword
       ) {
-        setError("Por favor completa todos los campos");
+        setError("Please fill in all fields");
         return;
       }
 
       if (passwordData.newPassword !== passwordData.confirmPassword) {
-        setError("Las contraseñas nuevas no coinciden");
+        setError("New passwords do not match");
         return;
       }
 
@@ -225,10 +225,10 @@ function EditUser() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al cambiar contraseña");
+        throw new Error(errorData.error || "Error changing password");
       }
 
-      setSuccess("Contraseña cambiada exitosamente");
+      setSuccess("Password changed successfully");
       setShowChangePasswordDialog(false);
       setPasswordData({
         currentPassword: "",
@@ -243,11 +243,11 @@ function EditUser() {
     }
   };
 
-  // Eliminar cuenta
+  // Delete account
   const handleDeleteAccount = async () => {
     try {
       if (!deletePassword) {
-        setError("Por favor ingresa tu contraseña");
+        setError("Please enter your password");
         return;
       }
 
@@ -269,12 +269,12 @@ function EditUser() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al eliminar cuenta");
+        throw new Error(errorData.error || "Error deleting account");
       }
 
-      // Limpiar token y redirigir al login
+      // Clear token and redirect to login
       localStorage.removeItem("artemis_token");
-      window.location.href = "/login"; // Ajusta la ruta según tu app
+      window.location.href = "/login"; // Adjust path according to your app
     } catch (err) {
       console.error("Error:", err);
       setError(err.message);
@@ -285,11 +285,11 @@ function EditUser() {
 
   const handleTogglePassword = () => setShowPassword((prev) => !prev);
 
-  // Formatear fecha de registro
+  // Format registration date
   const formatDate = (dateString) => {
-    if (!dateString) return "Fecha desconocida";
+    if (!dateString) return "Unknown date";
     const date = new Date(dateString);
-    return date.toLocaleDateString("es-ES", {
+    return date.toLocaleDateString("en-US", {
       day: "numeric",
       month: "long",
       year: "numeric",
@@ -315,8 +315,7 @@ function EditUser() {
     return (
       <Box sx={{ p: 4 }}>
         <Alert severity="error">
-          No se pudieron cargar los datos del usuario. Por favor, inicia sesión
-          nuevamente.
+          Could not load user data. Please log in again.
         </Alert>
       </Box>
     );
@@ -332,7 +331,7 @@ function EditUser() {
         p: 4,
       }}
     >
-      {/* Mensajes de error y éxito */}
+      {/* Error and success messages */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
@@ -348,7 +347,7 @@ function EditUser() {
         </Alert>
       )}
 
-      {/* Contenedor principal */}
+      {/* Main container */}
       <Paper
         elevation={3}
         sx={{
@@ -363,7 +362,7 @@ function EditUser() {
           gap: 6,
         }}
       >
-        {/* Columna izquierda: perfil */}
+        {/* Left column: profile */}
         <Box
           sx={{
             display: "flex",
@@ -402,13 +401,13 @@ function EditUser() {
             {userData.name}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Miembro desde el {formatDate(userData.createdAt)}
+            Member since {formatDate(userData.createdAt)}
           </Typography>
 
           <Divider sx={{ my: 3, width: "100%" }} />
 
           <Typography variant="h5" fontWeight="bold" mb={1}>
-            Fotos publicadas
+            Published Photos
           </Typography>
           <Box sx={{ textAlign: "center", width: "100%" }}>
             <Typography
@@ -421,12 +420,12 @@ function EditUser() {
           </Box>
         </Box>
 
-        {/* Columna derecha: formulario */}
+        {/* Right column: form */}
         <Box sx={{ width: "60%" }}>
           <Stack spacing={3}>
             <Box>
               <Typography variant="subtitle1" mb={1}>
-                Nombre
+                Name
               </Typography>
               <TextField
                 fullWidth
@@ -438,7 +437,7 @@ function EditUser() {
 
             <Box>
               <Typography variant="subtitle1" mb={1}>
-                Correo electrónico
+                Email
               </Typography>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
@@ -450,14 +449,14 @@ function EditUser() {
                   variant="outlined"
                   onClick={() => setShowChangeEmailDialog(true)}
                 >
-                  Cambiar
+                  Change
                 </Button>
               </Box>
             </Box>
 
             <Box>
               <Typography variant="subtitle1" mb={1}>
-                Contraseña
+                Password
               </Typography>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
@@ -470,13 +469,13 @@ function EditUser() {
                   variant="outlined"
                   onClick={() => setShowChangePasswordDialog(true)}
                 >
-                  Cambiar
+                  Change
                 </Button>
               </Box>
             </Box>
           </Stack>
 
-          {/* Botones de acción */}
+          {/* Action buttons */}
           <Box
             sx={{
               display: "flex",
@@ -497,7 +496,7 @@ function EditUser() {
                 setSuccess(null);
               }}
             >
-              Cancelar
+              Cancel
             </Button>
             <Button
               variant="contained"
@@ -505,13 +504,13 @@ function EditUser() {
               onClick={handleSaveChanges}
               disabled={saving}
             >
-              {saving ? <CircularProgress size={24} /> : "Guardar cambios"}
+              {saving ? <CircularProgress size={24} /> : "Save Changes"}
             </Button>
           </Box>
         </Box>
       </Paper>
 
-      {/* Botón de eliminar cuenta */}
+      {/* Delete account button */}
       <Box
         sx={{
           mt: 5,
@@ -532,20 +531,20 @@ function EditUser() {
             textTransform: "none",
           }}
         >
-          Eliminar cuenta
+          Delete Account
         </Button>
       </Box>
 
-      {/* Diálogo para cambiar email */}
+      {/* Change email dialog */}
       <Dialog
         open={showChangeEmailDialog}
         onClose={() => setShowChangeEmailDialog(false)}
       >
-        <DialogTitle>Cambiar correo electrónico</DialogTitle>
+        <DialogTitle>Change Email</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 2, minWidth: 400 }}>
             <TextField
-              label="Nuevo email"
+              label="New Email"
               type="email"
               fullWidth
               value={emailData.newEmail}
@@ -554,7 +553,7 @@ function EditUser() {
               }
             />
             <TextField
-              label="Contraseña actual"
+              label="Current Password"
               type="password"
               fullWidth
               value={emailData.password}
@@ -566,28 +565,28 @@ function EditUser() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowChangeEmailDialog(false)}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             onClick={handleChangeEmail}
             variant="contained"
             disabled={saving}
           >
-            {saving ? <CircularProgress size={24} /> : "Cambiar email"}
+            {saving ? <CircularProgress size={24} /> : "Change Email"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo para cambiar contraseña */}
+      {/* Change password dialog */}
       <Dialog
         open={showChangePasswordDialog}
         onClose={() => setShowChangePasswordDialog(false)}
       >
-        <DialogTitle>Cambiar contraseña</DialogTitle>
+        <DialogTitle>Change Password</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 2, minWidth: 400 }}>
             <TextField
-              label="Contraseña actual"
+              label="Current Password"
               type="password"
               fullWidth
               value={passwordData.currentPassword}
@@ -599,7 +598,7 @@ function EditUser() {
               }
             />
             <TextField
-              label="Nueva contraseña"
+              label="New Password"
               type="password"
               fullWidth
               value={passwordData.newPassword}
@@ -611,7 +610,7 @@ function EditUser() {
               }
             />
             <TextField
-              label="Confirmar nueva contraseña"
+              label="Confirm New Password"
               type="password"
               fullWidth
               value={passwordData.confirmPassword}
@@ -626,31 +625,30 @@ function EditUser() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowChangePasswordDialog(false)}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             onClick={handleChangePassword}
             variant="contained"
             disabled={saving}
           >
-            {saving ? <CircularProgress size={24} /> : "Cambiar contraseña"}
+            {saving ? <CircularProgress size={24} /> : "Change Password"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Diálogo de confirmación para eliminar cuenta */}
+      {/* Delete account confirmation dialog */}
       <Dialog
         open={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
       >
-        <DialogTitle>¿Estás seguro?</DialogTitle>
+        <DialogTitle>Are you sure?</DialogTitle>
         <DialogContent>
           <Typography mb={2}>
-            Esta acción no se puede deshacer. Se eliminarán todos tus datos y
-            fotos.
+            This action cannot be undone. All your data and photos will be deleted.
           </Typography>
           <TextField
-            label="Confirma tu contraseña"
+            label="Confirm your password"
             type="password"
             fullWidth
             value={deletePassword}
@@ -658,14 +656,14 @@ function EditUser() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowDeleteDialog(false)}>Cancelar</Button>
+          <Button onClick={() => setShowDeleteDialog(false)}>Cancel</Button>
           <Button
             onClick={handleDeleteAccount}
             color="error"
             variant="contained"
             disabled={saving}
           >
-            {saving ? <CircularProgress size={24} /> : "Eliminar cuenta"}
+            {saving ? <CircularProgress size={24} /> : "Delete Account"}
           </Button>
         </DialogActions>
       </Dialog>
