@@ -214,14 +214,14 @@ export const unlikePost = async (postId, userId) => {
   }
 };
 
-export const addPostComment = async (postId, userId, userName, text) => {
+export const addPostComment = async (postId, userId, userName, userProfilePic, text) => {
   try {
     const response = await fetch(`${API_URL}/posts/${postId}/comment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ userId, userName, text }),
+      body: JSON.stringify({ userId, userName, userProfilePic, text }),
     });
     if (!response.ok) throw new Error('Error al agregar comentario al post');
     return await response.json();

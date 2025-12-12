@@ -78,7 +78,9 @@ function SidePanel() {
                         ? "rgba(255, 123, 0, 0.22)"
                         : "rgba(255,255,255,0.02)",
                       fontWeight: isActive ? 700 : 500,
-                      boxShadow: isActive ? "0 6px 20px rgba(255,123,0,0.12)" : "none",
+                      boxShadow: isActive
+                        ? "0 6px 20px rgba(255,123,0,0.12)"
+                        : "none",
                       backdropFilter: "blur(4px)",
                       transition: "all 180ms ease",
                       "&:hover": {
@@ -104,9 +106,7 @@ function SidePanel() {
                     }}
                     fullWidth
                     onClick={() => {
-                      if (item.id !== 2) {
-                        navigate(item.path);
-                      }
+                      navigate(item.path);
                     }}
                   >
                     <Box className="sidepanel-icon">{item.icon}</Box>

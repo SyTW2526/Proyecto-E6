@@ -32,6 +32,7 @@ function HomePage() {
       >
         <ChartMoonAlt />
         <MoonInfoCard />
+        <Box sx={{ height: "30px" }} />
         <ChartSunAlt />
         <SunInfoCard />
       </Box>

@@ -58,6 +58,7 @@ function Gallery() {
           color: "rgba(44, 44, 44, 0.9)",
           fontWeight: 600,
           mb: 2,
+          mt: 2,
         }}
       >
         My Gallery
@@ -92,7 +93,7 @@ function Gallery() {
                 color: 'text.secondary'
               }}
             >
-              Cargando imágenes...
+              Loading images...
             </Typography>
           </Box>
         ) : (

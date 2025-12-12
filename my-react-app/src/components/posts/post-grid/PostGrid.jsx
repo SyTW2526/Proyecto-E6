@@ -95,17 +95,10 @@ function PostGrid({ posts, onDelete }) {
     return post.photos?.slice(0, 2) || [];
   };
 
-  // Ordenar posts por número de likes (de mayor a menor)
-  const sortedPosts = [...posts].sort((a, b) => {
-    const aLikes = Array.isArray(a.likes) ? a.likes.length : 0;
-    const bLikes = Array.isArray(b.likes) ? b.likes.length : 0;
-    return bLikes - aLikes;
-  });
-
   return (
     <>
   <Grid container spacing={3} justifyContent="center" sx={{ maxWidth: 1300, mx: 'auto' }}>
-      {sortedPosts.map((post) => {
+      {posts.map((post) => {
           const previewImages = getPreviewImages(post);
           
           return (
@@ -289,7 +282,10 @@ function PostGrid({ posts, onDelete }) {
             {selectedPost?.comments && selectedPost.comments.length > 0 ? (
               selectedPost.comments.map((comment, index) => (
                 <ListItem key={comment._id || index} alignItems="flex-start" sx={{ px: 0 }}>
-                  <Avatar sx={{ mr: 2, bgcolor: 'primary.main' }}>
+                  <Avatar 
+                    src={comment.userProfilePic}
+                    sx={{ mr: 2, bgcolor: 'primary.main' }}
+                  >
                     {(comment.userName || 'U').charAt(0).toUpperCase()}
                   </Avatar>
                   <ListItemText
@@ -334,7 +330,10 @@ function PostGrid({ posts, onDelete }) {
           {/* Add Comment */}
           {currentUser && (
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
-              <Avatar sx={{ bgcolor: 'primary.main', mt: 1 }}>
+              <Avatar 
+                src={currentUser.profilePic}
+                sx={{ bgcolor: 'primary.main', mt: 1 }}
+              >
                 {currentUser.name.charAt(0).toUpperCase()}
               </Avatar>
               <TextField

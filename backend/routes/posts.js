@@ -139,14 +139,14 @@ router.delete('/:id/like/:userId', async (req, res) => {
 // POST - Agregar un comentario a un post
 router.post('/:id/comment', async (req, res) => {
   try {
-    const { userId, userName, text } = req.body;
+    const { userId, userName, userProfilePic, text } = req.body;
     const post = await Post.findById(req.params.id);
     
     if (!post) {
       return res.status(404).json({ message: 'Post no encontrado' });
     }
     
-  post.comments.push({ userId, userName, text, date: new Date() });
+  post.comments.push({ userId, userName, userProfilePic, text, date: new Date() });
   await post.save();
   // Return the post populated with photos to keep frontend data consistent
   const populatedPost = await Post.findById(post._id).populate('photos');

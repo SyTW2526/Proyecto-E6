@@ -24,6 +24,7 @@ export function AppProvider({ children }) {
   const [longitudeState, setLongitudeState] = useState(location.lng);
   const [latitudeState, setLatitudeState] = useState(location.lat);
   const [actualDate, setActualDate] = useState(dayjs());
+  const [timeSpeed, setTimeSpeed] = useState(1); // 1 = normal, mayor = más rápido
 
   useEffect(() => {
     // Geolocation: try to obtain current position. If it fails (permission denied, timeout), keep defaults.
@@ -49,6 +50,102 @@ export function AppProvider({ children }) {
     }
 
     const token = localStorage.getItem("artemis_token");
+    const bypassAuth = localStorage.getItem("artemis_bypass_auth");
+    const urlParams = new URLSearchParams(window.location.search);
+    const bypassUrl = urlParams.get("bypass_auth");
+
+    // SOLO permitir bypass en desarrollo
+    if (
+      import.meta.env.DEV &&
+      (bypassAuth === "true" || bypassUrl === "true")
+    ) {
+      console.log("⚠️ Auth Bypass Activated (DEV MODE ONLY)");
+
+      const mockUser = {
+        id: "test-user-id",
+        name: "Test User",
+        email: "test@example.com",
+        profilePic: "",
+        bio: "Test Bio",
+      };
+
+      setCurrentUser(mockUser);
+
+      // Crear datos de prueba para fotos
+      const mockPhotos = [
+        {
+          _id: "photo-1",
+          userId: mockUser.id,
+          imageUrl:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%234a90e2' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dy='.3em'%3EMock Photo 1%3C/text%3E%3C/svg%3E",
+          title: "Luna Llena",
+          description: "Foto de prueba de la luna llena",
+          moonPhase: 100,
+          date: new Date().toISOString(),
+          location: { lat: 28.4636, lng: -16.2518 },
+          likes: [],
+          comments: [],
+          metadata: {
+            camera: "Canon EOS R5",
+            lens: "RF 100-500mm",
+            iso: "800",
+            exposure: "1/250s",
+            aperture: "f/5.6",
+          },
+          createdAt: new Date().toISOString(),
+        },
+        {
+          _id: "photo-2",
+          userId: mockUser.id,
+          imageUrl:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect fill='%23e94b3c' width='400' height='300'/%3E%3Ctext x='50%25' y='50%25' font-size='24' fill='white' text-anchor='middle' dy='.3em'%3EMock Photo 2%3C/text%3E%3C/svg%3E",
+          title: "Vía Láctea",
+          description: "Foto de prueba de la vía láctea",
+          moonPhase: 25,
+          date: new Date(Date.now() - 86400000).toISOString(),
+          location: { lat: 40.4168, lng: -3.7038 },
+          likes: [mockUser.id],
+          comments: [
+            {
+              userId: "other-user",
+              userName: "Otro Usuario",
+              text: "¡Increíble foto!",
+              createdAt: new Date().toISOString(),
+            },
+          ],
+          metadata: {
+            camera: "Nikon Z6",
+            lens: "14-24mm",
+            iso: "3200",
+            exposure: "30s",
+            aperture: "f/2.8",
+          },
+          createdAt: new Date(Date.now() - 86400000).toISOString(),
+        },
+      ];
+
+      // Crear datos de prueba para posts
+      const mockPosts = [
+        {
+          _id: "post-1",
+          userId: mockUser.id,
+          userName: mockUser.name,
+          title: "Mi primera observación",
+          description: "Post de prueba sobre observación astronómica",
+          photos: ["photo-1"],
+          likes: [],
+          comments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      setPhotos(mockPhotos);
+      setPosts(mockPosts);
+      setLoadingImages(false);
+      setLoadingPosts(false);
+      setLoading(false);
+      return;
+    }
 
     if (token) {
       // Verificar token con el servidor
@@ -333,6 +430,7 @@ export function AppProvider({ children }) {
         postId,
         currentUser.id,
         currentUser.name,
+        currentUser.profilePic,
         commentText
       );
       setPosts(
@@ -354,7 +452,11 @@ export function AppProvider({ children }) {
       if (!currentUser) {
         throw new Error("Debes estar logueado para eliminar comentarios");
       }
-      const result = await api.deletePostComment(postId, commentId, currentUser.id);
+      const result = await api.deletePostComment(
+        postId,
+        commentId,
+        currentUser.id
+      );
       setPosts(
         posts.map((post) => {
           if (post._id === postId) {
@@ -406,6 +508,10 @@ export function AppProvider({ children }) {
     setActualDate(dayjs(newDate));
   };
 
+  const toggleTimeSpeed = () => {
+    setTimeSpeed((prevSpeed) => (prevSpeed === 1 ? 10000 : 1));
+  };
+
   // Valor del contexto (lo que compartimos con toda la app)
   const value = {
     // Estado
@@ -422,6 +528,7 @@ export function AppProvider({ children }) {
     actualDate,
     latitudeState,
     longitudeState,
+    timeSpeed,
 
     // Acciones de usuarios
     loginUser,
@@ -451,6 +558,7 @@ export function AppProvider({ children }) {
     updateLocation,
     updateSelectedDate,
     updateActualDate,
+    toggleTimeSpeed,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
