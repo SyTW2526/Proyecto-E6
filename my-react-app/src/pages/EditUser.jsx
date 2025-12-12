@@ -600,10 +600,10 @@ function EditUser() {
                 textTransform: "none",
               }}
             >
-              Eliminar cuenta
+              Delete account
             </Button>
             <Typography variant="body2" color="text.secondary" mb={2}>
-              Esta acción es irreversible. Se eliminarán todos tus datos y fotos permanentemente.
+              This action cannot be undone. All your data and photos will be deleted.
             </Typography>
           </Box>
         </Box>
