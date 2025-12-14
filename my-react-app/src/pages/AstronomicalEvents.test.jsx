@@ -1,7 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AstronomicalEvents from './AstronomicalEvents';
+import * as AppContextModule from '../AppContext';
 import * as SunCalcModule from '../three-app/suncalc.js';
+
+// Mock de NextEclipseButton
+vi.mock('../components/next-eclipse-button/NextEclipseButton', () => ({
+  default: ({ lat, lng }) => (
+    <button data-testid="next-eclipse-button">
+      Next Eclipse (lat: {lat}, lng: {lng})
+    </button>
+  )
+}));
 
 // Mock de FullCalendar
 vi.mock('@fullcalendar/react', () => ({
@@ -47,13 +57,22 @@ vi.mock('@mui/material', () => ({
 }));
 
 describe('AstronomicalEvents Component', () => {
+  let mockContextValue;
   let mockSunCalc;
 
   beforeEach(() => {
+    // Mock del contexto
+    mockContextValue = {
+      latitudeState: 40.4168,
+      longitudeState: -3.7038
+    };
+    
+    vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
+
     // Mock de SunCalc
     mockSunCalc = {
       getMoonIllumination: vi.fn().mockReturnValue({
-        phase: 0.5, // Luna llena
+        phase: 0.5, // Full moon
         fraction: 0.99
       }),
       getMoonPosition: vi.fn().mockReturnValue({
@@ -76,22 +95,30 @@ describe('AstronomicalEvents Component', () => {
     return render(<AstronomicalEvents />);
   };
 
-  it('debería renderizar el título del calendario', () => {
+  it('should render the calendar title', () => {
     renderAstronomicalEvents();
-    expect(screen.getByText('Calendario de Efemérides Astronómicas')).toBeInTheDocument();
+    expect(screen.getByText('Astronomical Events Calendar')).toBeInTheDocument();
   });
 
-  it('debería renderizar el texto descriptivo', () => {
+  it('should render the descriptive text', () => {
     renderAstronomicalEvents();
-    expect(screen.getByText(/Cada día muestra su fase lunar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Each day shows its moon phase/i)).toBeInTheDocument();
   });
 
-  it('debería renderizar el componente FullCalendar', () => {
+  it('should render the FullCalendar component', () => {
     renderAstronomicalEvents();
     expect(screen.getByTestId('full-calendar')).toBeInTheDocument();
   });
 
-  it('debería generar eventos para los próximos 365 días', async () => {
+  it('should render the NextEclipseButton with correct coordinates', () => {
+    renderAstronomicalEvents();
+    const button = screen.getByTestId('next-eclipse-button');
+    expect(button).toBeInTheDocument();
+    expect(button).toHaveTextContent('lat: 40.4168');
+    expect(button).toHaveTextContent('lng: -3.7038');
+  });
+
+  it('should generate events for the next 365 days', async () => {
     renderAstronomicalEvents();
     
     await waitFor(() => {
@@ -101,7 +128,7 @@ describe('AstronomicalEvents Component', () => {
     });
   });
 
-  it('debería abrir el diálogo al hacer click en una fecha', () => {
+  it('should open the dialog when clicking on a date', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
@@ -110,16 +137,16 @@ describe('AstronomicalEvents Component', () => {
     expect(screen.getByTestId('dialog')).toBeInTheDocument();
   });
 
-  it('debería mostrar el título del diálogo con la fecha seleccionada', () => {
+  it('should show the dialog title with the selected date', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByTestId('dialog-title')).toHaveTextContent('Fase lunar del 2025-01-15');
+    expect(screen.getByTestId('dialog-title')).toHaveTextContent('Moon Phase for 2025-01-15');
   });
 
-  it('debería calcular y mostrar los datos de la luna al seleccionar una fecha', () => {
+  it('should calculate and display moon data when selecting a date', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
@@ -130,9 +157,9 @@ describe('AstronomicalEvents Component', () => {
     expect(mockSunCalc.getMoonTimes).toHaveBeenCalled();
   });
 
-  it('debería mostrar el emoji correcto según la fase lunar', () => {
+  it('should show the correct emoji for the moon phase', () => {
     mockSunCalc.getMoonIllumination.mockReturnValue({
-      phase: 0.5, // Luna llena
+      phase: 0.5, // Full moon
       fraction: 0.99
     });
     
@@ -145,9 +172,9 @@ describe('AstronomicalEvents Component', () => {
     expect(dialogContent).toHaveTextContent('🌕');
   });
 
-  it('debería mostrar el nombre correcto de la fase lunar', () => {
+  it('should show the correct name for the moon phase', () => {
     mockSunCalc.getMoonIllumination.mockReturnValue({
-      phase: 0.5, // Luna llena
+      phase: 0.5, // Full moon
       fraction: 0.99
     });
     
@@ -156,50 +183,50 @@ describe('AstronomicalEvents Component', () => {
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByText('LUNA LLENA')).toBeInTheDocument();
+    expect(screen.getByText('FULL MOON')).toBeInTheDocument();
   });
 
-  it('debería mostrar la hora de salida de la luna', () => {
+  it('should show the moonrise time', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByText(/Salida de la luna:/i)).toBeInTheDocument();
-    expect(screen.getByText(/18:30/)).toBeInTheDocument();
+    expect(screen.getByText(/Moonrise:/i)).toBeInTheDocument();
+    expect(screen.getByText(/06:30 PM/i)).toBeInTheDocument();
   });
 
-  it('debería mostrar la hora de puesta de la luna', () => {
+  it('should show the moonset time', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByText(/Puesta de la luna:/i)).toBeInTheDocument();
-    expect(screen.getByText(/06:45/)).toBeInTheDocument();
+    expect(screen.getByText(/Moonset:/i)).toBeInTheDocument();
+    expect(screen.getByText(/06:45 AM/i)).toBeInTheDocument();
   });
 
-  it('debería mostrar la distancia de la luna', () => {
+  it('should show the moon distance', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByText(/Distancia:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Distance:/i)).toBeInTheDocument();
     expect(screen.getByText(/384400 km/)).toBeInTheDocument();
   });
 
-  it('debería mostrar el porcentaje de iluminación', () => {
+  it('should show the illumination percentage', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
     fireEvent.click(dateButton);
     
-    expect(screen.getByText(/Iluminación:/i)).toBeInTheDocument();
+    expect(screen.getByText(/Illumination:/i)).toBeInTheDocument();
     expect(screen.getByText(/99.0%/)).toBeInTheDocument();
   });
 
-  it('debería mostrar la barra de progreso de iluminación', () => {
+  it('should show the illumination progress bar', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
@@ -210,7 +237,7 @@ describe('AstronomicalEvents Component', () => {
     expect(progressBar.getAttribute('data-value')).toBe('99');
   });
 
-  it('debería cerrar el diálogo al hacer click fuera', () => {
+  it('should close the dialog when clicking outside', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
@@ -224,7 +251,7 @@ describe('AstronomicalEvents Component', () => {
     expect(screen.queryByTestId('dialog')).not.toBeInTheDocument();
   });
 
-  it('debería manejar el caso cuando no hay hora de salida de la luna', () => {
+  it('should handle the case when there is no moonrise time', () => {
     mockSunCalc.getMoonTimes.mockReturnValue({
       rise: null,
       set: new Date('2025-01-15T06:45:00')
@@ -238,7 +265,7 @@ describe('AstronomicalEvents Component', () => {
     expect(screen.getByText(/N\/A/)).toBeInTheDocument();
   });
 
-  it('debería usar las coordenadas correctas de Madrid', () => {
+  it('should use the correct coordinates from context', () => {
     renderAstronomicalEvents();
     
     const dateButton = screen.getByTestId('calendar-date-2025-01-15');
@@ -251,7 +278,24 @@ describe('AstronomicalEvents Component', () => {
     );
   });
 
-  it('debería retornar el emoji correcto para luna nueva', () => {
+  it('should use default Madrid coordinates when context values are null', () => {
+    mockContextValue.latitudeState = null;
+    mockContextValue.longitudeState = null;
+    vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
+    
+    renderAstronomicalEvents();
+    
+    const dateButton = screen.getByTestId('calendar-date-2025-01-15');
+    fireEvent.click(dateButton);
+    
+    expect(mockSunCalc.getMoonPosition).toHaveBeenCalledWith(
+      expect.any(Date),
+      40.4168,
+      -3.7038
+    );
+  });
+
+  it('should return the correct emoji for new moon', () => {
     mockSunCalc.getMoonIllumination.mockReturnValue({
       phase: 0.01,
       fraction: 0.0
@@ -266,7 +310,7 @@ describe('AstronomicalEvents Component', () => {
     expect(dialogContent).toHaveTextContent('🌑');
   });
 
-  it('debería retornar el emoji correcto para cuarto creciente', () => {
+  it('should return the correct emoji for first quarter', () => {
     mockSunCalc.getMoonIllumination.mockReturnValue({
       phase: 0.25,
       fraction: 0.5
@@ -281,4 +325,60 @@ describe('AstronomicalEvents Component', () => {
     expect(dialogContent).toHaveTextContent('🌓');
   });
 
+  it('should return the correct name for new moon phase', () => {
+    mockSunCalc.getMoonIllumination.mockReturnValue({
+      phase: 0.01,
+      fraction: 0.0
+    });
+    
+    renderAstronomicalEvents();
+    
+    const dateButton = screen.getByTestId('calendar-date-2025-01-15');
+    fireEvent.click(dateButton);
+    
+    expect(screen.getByText('NEW MOON')).toBeInTheDocument();
+  });
+
+  it('should return the correct name for first quarter phase', () => {
+    mockSunCalc.getMoonIllumination.mockReturnValue({
+      phase: 0.25,
+      fraction: 0.5
+    });
+    
+    renderAstronomicalEvents();
+    
+    const dateButton = screen.getByTestId('calendar-date-2025-01-15');
+    fireEvent.click(dateButton);
+    
+    expect(screen.getByText('FIRST QUARTER')).toBeInTheDocument();
+  });
+
+  it('should handle the case when there is no moonset time', () => {
+    mockSunCalc.getMoonTimes.mockReturnValue({
+      rise: new Date('2025-01-15T18:30:00'),
+      set: null
+    });
+    
+    renderAstronomicalEvents();
+    
+    const dateButton = screen.getByTestId('calendar-date-2025-01-15');
+    fireEvent.click(dateButton);
+    
+    const dialogContent = screen.getByTestId('dialog-content');
+    expect(dialogContent.textContent).toContain('N/A');
+  });
+
+  it('should clear moon data when closing the dialog', () => {
+    renderAstronomicalEvents();
+    
+    const dateButton = screen.getByTestId('calendar-date-2025-01-15');
+    fireEvent.click(dateButton);
+    
+    expect(screen.getByTestId('dialog')).toBeInTheDocument();
+    
+    const dialog = screen.getByTestId('dialog');
+    fireEvent.click(dialog);
+    
+    expect(screen.queryByTestId('dialog')).not.toBeInTheDocument();
+  });
 });

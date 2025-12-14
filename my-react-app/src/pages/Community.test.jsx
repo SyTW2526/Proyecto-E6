@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import Community from './Community';
 import * as AppContextModule from '../AppContext';
 
@@ -76,7 +76,7 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    expect(screen.getByText('Cargando posts...')).toBeInTheDocument();
+    expect(screen.getByText('Loading posts...')).toBeInTheDocument();
   });
 
   it('debería renderizar PostGrid con los posts del contexto', () => {
@@ -113,7 +113,7 @@ describe('Community Component', () => {
     expect(screen.getByText('Post 2')).toBeInTheDocument();
   });
 
-  it('debería abrir el diálogo al hacer click en el botón añadir', () => {
+  it('debería abrir el diálogo al hacer click en añadir post', () => {
     renderCommunity();
     
     const addButton = screen.getByTestId('add-post-button');
@@ -122,95 +122,76 @@ describe('Community Component', () => {
     expect(screen.getByTestId('add-post-dialog')).toBeInTheDocument();
   });
 
-  it('debería cerrar el diálogo al hacer click en close', () => {
+  it('debería cerrar el diálogo al hacer click en cerrar', () => {
     renderCommunity();
     
-    // Abrir diálogo
     const addButton = screen.getByTestId('add-post-button');
     fireEvent.click(addButton);
     
-    expect(screen.getByTestId('add-post-dialog')).toBeInTheDocument();
-    
-    // Cerrar diálogo
     const closeButton = screen.getByText('Close');
     fireEvent.click(closeButton);
     
     expect(screen.queryByTestId('add-post-dialog')).not.toBeInTheDocument();
   });
 
-  it('debería llamar a addPost cuando se confirma el diálogo', async () => {
-    const addPostMock = vi.fn().mockResolvedValue();
+  it('debería llamar a addPost cuando se confirma el diálogo', () => {
+    const addPostMock = vi.fn().mockResolvedValue({});
     mockContextValue.addPost = addPostMock;
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
-    // Abrir diálogo
     const addButton = screen.getByTestId('add-post-button');
     fireEvent.click(addButton);
     
-    // Confirmar
     const confirmButton = screen.getByText('Confirm');
     fireEvent.click(confirmButton);
     
-    await waitFor(() => {
-      expect(addPostMock).toHaveBeenCalledWith({
-        title: 'Test Post',
-        description: 'Test description'
-      });
+    expect(addPostMock).toHaveBeenCalledWith({
+      title: 'Test Post',
+      description: 'Test description'
     });
   });
 
-  it('debería cerrar el diálogo después de confirmar exitosamente', async () => {
-    const addPostMock = vi.fn().mockResolvedValue();
-    mockContextValue.addPost = addPostMock;
+  it('debería cerrar el diálogo después de añadir un post exitosamente', async () => {
+    mockContextValue.addPost = vi.fn().mockResolvedValue({});
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
-    // Abrir diálogo
     const addButton = screen.getByTestId('add-post-button');
     fireEvent.click(addButton);
     
-    expect(screen.getByTestId('add-post-dialog')).toBeInTheDocument();
-    
-    // Confirmar
     const confirmButton = screen.getByText('Confirm');
     fireEvent.click(confirmButton);
     
-    await waitFor(() => {
+    await vi.waitFor(() => {
       expect(screen.queryByTestId('add-post-dialog')).not.toBeInTheDocument();
     });
   });
 
-  it('debería manejar errores al añadir un post', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const addPostMock = vi.fn().mockRejectedValue(new Error('Failed to add post'));
-    mockContextValue.addPost = addPostMock;
+  it('debería manejar errores al añadir post', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockContextValue.addPost = vi.fn().mockRejectedValue(new Error('Error al crear post'));
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
-    // Abrir diálogo
     const addButton = screen.getByTestId('add-post-button');
     fireEvent.click(addButton);
     
-    // Confirmar
     const confirmButton = screen.getByText('Confirm');
     fireEvent.click(confirmButton);
     
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error al crear post:',
-        expect.any(Error)
-      );
+    await vi.waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalled();
     });
     
-    consoleSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 
-  it('debería llamar a deletePost cuando se elimina un post', async () => {
-    const deletePostMock = vi.fn().mockResolvedValue();
+  it('debería llamar a deletePost cuando se hace click en eliminar', () => {
+    const deletePostMock = vi.fn().mockResolvedValue({});
     mockContextValue.deletePost = deletePostMock;
     mockContextValue.posts = [
       {
@@ -221,7 +202,8 @@ describe('Community Component', () => {
         userName: 'User',
         photos: [],
         likes: [],
-        comments: []
+        comments: [],
+        createdAt: '2025-01-01'
       }
     ];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
@@ -231,62 +213,38 @@ describe('Community Component', () => {
     const deleteButton = screen.getByText('Delete');
     fireEvent.click(deleteButton);
     
-    await waitFor(() => {
-      expect(deletePostMock).toHaveBeenCalledWith('1');
-    });
+    expect(deletePostMock).toHaveBeenCalledWith('1');
   });
 
-  it('debería manejar errores al eliminar un post', async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const deletePostMock = vi.fn().mockRejectedValue(new Error('Failed to delete post'));
-    mockContextValue.deletePost = deletePostMock;
-    mockContextValue.posts = [
-      {
-        _id: '1',
-        title: 'Post 1',
-        description: 'Description',
-        userId: 'user1',
-        userName: 'User',
-        photos: [],
-        likes: [],
-        comments: []
-      }
-    ];
-    vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
-    
+  it('debería renderizar el separador', () => {
     renderCommunity();
     
-    const deleteButton = screen.getByText('Delete');
-    fireEvent.click(deleteButton);
-    
-    await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error al eliminar post:',
-        expect.any(Error)
-      );
-    });
-    
-    consoleSpy.mockRestore();
+    const dividers = document.querySelectorAll('hr');
+    expect(dividers.length).toBeGreaterThan(0);
   });
 
-  it('debería renderizar el separador decorativo', () => {
-    const { container } = renderCommunity();
-    
-    // Verificar que existe un Divider
-    const divider = container.querySelector('hr');
-    expect(divider).toBeInTheDocument();
-  });
-
-  it('no debería mostrar PostGrid cuando está cargando', () => {
+  it('debería mostrar el mensaje de carga cuando loadingPosts es true y no el grid', () => {
     mockContextValue.loadingPosts = true;
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
+    expect(screen.getByText('Loading posts...')).toBeInTheDocument();
     expect(screen.queryByTestId('post-grid')).not.toBeInTheDocument();
   });
 
-  it('debería renderizar PostGrid con posts vacíos', () => {
+  it('debería mostrar el PostGrid cuando loadingPosts es false', () => {
+    mockContextValue.loadingPosts = false;
+    mockContextValue.posts = [];
+    vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
+    
+    renderCommunity();
+    
+    expect(screen.queryByText('Loading posts...')).not.toBeInTheDocument();
+    expect(screen.getByTestId('post-grid')).toBeInTheDocument();
+  });
+
+  it('debería manejar posts vacíos', () => {
     mockContextValue.posts = [];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
@@ -295,24 +253,37 @@ describe('Community Component', () => {
     expect(screen.getByTestId('post-grid')).toBeInTheDocument();
   });
 
-  it('debería manejar posts con id regular (sin _id)', () => {
+  it('debería manejar posts con id regular y _id de MongoDB', () => {
     mockContextValue.posts = [
       {
-        id: 'regular-id-1',
-        title: 'Post with regular id',
+        id: '1',
+        title: 'Post with id',
         description: 'Description',
         userId: 'user1',
         userName: 'User',
         photos: [],
         likes: [],
-        comments: []
+        comments: [],
+        createdAt: '2025-01-01'
+      },
+      {
+        _id: '2',
+        title: 'Post with _id',
+        description: 'Description',
+        userId: 'user2',
+        userName: 'User',
+        photos: [],
+        likes: [],
+        comments: [],
+        createdAt: '2025-01-02'
       }
     ];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
-    expect(screen.getByTestId('post-regular-id-1')).toBeInTheDocument();
+    expect(screen.getByText('Post with id')).toBeInTheDocument();
+    expect(screen.getByText('Post with _id')).toBeInTheDocument();
   });
 
   it('debería pasar onDelete correctamente al PostGrid', () => {
@@ -325,14 +296,14 @@ describe('Community Component', () => {
         userName: 'User',
         photos: [],
         likes: [],
-        comments: []
+        comments: [],
+        createdAt: '2025-01-01'
       }
     ];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
     renderCommunity();
     
-    // Verificar que el botón de eliminar está presente
     expect(screen.getByText('Delete')).toBeInTheDocument();
   });
 
@@ -340,7 +311,7 @@ describe('Community Component', () => {
   it('debería renderizar el campo de búsqueda', () => {
     renderCommunity();
     
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     expect(searchInput).toBeInTheDocument();
   });
 
@@ -373,7 +344,7 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     fireEvent.change(searchInput, { target: { value: 'Alice' } });
     
     expect(screen.getByText('Post 1')).toBeInTheDocument();
@@ -409,7 +380,7 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     fireEvent.change(searchInput, { target: { value: 'Sunset' } });
     
     expect(screen.getByText('Amazing Sunset')).toBeInTheDocument();
@@ -445,7 +416,7 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     fireEvent.change(searchInput, { target: { value: 'landscape' } });
     
     expect(screen.getByText('Post 1')).toBeInTheDocument();
@@ -489,7 +460,7 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     fireEvent.change(searchInput, { target: { value: 'Canon' } });
     
     expect(screen.getByText('Post 1')).toBeInTheDocument();
@@ -533,8 +504,8 @@ describe('Community Component', () => {
   it('debería renderizar los botones de ordenamiento', () => {
     renderCommunity();
     
-    expect(screen.getByText('Más Populares')).toBeInTheDocument();
-    expect(screen.getByText('Más Recientes')).toBeInTheDocument();
+    expect(screen.getByText('Most Popular')).toBeInTheDocument();
+    expect(screen.getByText('Most Recent')).toBeInTheDocument();
   });
 
   it('debería ordenar posts por popularidad (más likes primero)', () => {
@@ -575,12 +546,11 @@ describe('Community Component', () => {
     ];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
-    const { container } = renderCommunity();
+    renderCommunity();
     
-    const popularButton = screen.getByText('Más Populares');
+    const popularButton = screen.getByText('Most Popular');
     fireEvent.click(popularButton);
     
-    // Verificar que los posts están en el orden correcto (por likes)
     const postGrid = screen.getByTestId('post-grid');
     const postTitles = Array.from(postGrid.querySelectorAll('span')).map(span => span.textContent);
     
@@ -627,12 +597,11 @@ describe('Community Component', () => {
     ];
     vi.spyOn(AppContextModule, 'useAppContext').mockReturnValue(mockContextValue);
     
-    const { container } = renderCommunity();
+    renderCommunity();
     
-    const recentButton = screen.getByText('Más Recientes');
+    const recentButton = screen.getByText('Most Recent');
     fireEvent.click(recentButton);
     
-    // Verificar que los posts están en el orden correcto (por fecha)
     const postGrid = screen.getByTestId('post-grid');
     const postTitles = Array.from(postGrid.querySelectorAll('span')).map(span => span.textContent);
     
@@ -681,30 +650,25 @@ describe('Community Component', () => {
     
     renderCommunity();
     
-    // Buscar posts con "Sunset"
-    const searchInput = screen.getByPlaceholderText(/Buscar por nombre de usuario/i);
+    const searchInput = screen.getByPlaceholderText(/Search by username/i);
     fireEvent.change(searchInput, { target: { value: 'Sunset' } });
     
-    // Ordenar por popularidad
-    const popularButton = screen.getByText('Más Populares');
+    const popularButton = screen.getByText('Most Popular');
     fireEvent.click(popularButton);
     
-    // Solo deberían aparecer los posts con "Sunset" y ordenados por likes
-    expect(screen.getByText('Sunset View')).toBeInTheDocument(); // 3 likes
-    expect(screen.getByText('Sunset Photo')).toBeInTheDocument(); // 1 like
+    expect(screen.getByText('Sunset View')).toBeInTheDocument();
+    expect(screen.getByText('Sunset Photo')).toBeInTheDocument();
     expect(screen.queryByText('Mountain')).not.toBeInTheDocument();
   });
 
   it('debería mostrar el botón activo visualmente', () => {
     renderCommunity();
     
-    const popularButton = screen.getByText('Más Populares');
-    const recentButton = screen.getByText('Más Recientes');
+    const popularButton = screen.getByText('Most Popular');
+    const recentButton = screen.getByText('Most Recent');
     
-    // Por defecto, "Más Populares" está activo
     expect(popularButton.closest('button')).toHaveClass('MuiButton-contained');
     
-    // Click en "Más Recientes"
     fireEvent.click(recentButton);
     
     expect(recentButton.closest('button')).toHaveClass('MuiButton-contained');

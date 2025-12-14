@@ -76,7 +76,7 @@ describe('Gallery Component', () => {
     
     renderGallery();
     
-    expect(screen.getByText('Cargando imágenes...')).toBeInTheDocument();
+    expect(screen.getByText('Loading images...')).toBeInTheDocument();
   });
 
   it('debería renderizar ImageGrid con las fotos del contexto', () => {
