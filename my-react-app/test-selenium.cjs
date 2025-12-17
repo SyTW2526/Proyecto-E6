@@ -14,7 +14,7 @@ const TEST_CREDENTIALS = {
 };
 
 async function testArtemisApp() {
-  console.log("🚀 Iniciando tests E2E de Artemis...\n");
+  console.log("Iniciando tests E2E de Artemis\n");
 
   // Configurar opciones de Chrome
   const chromeOptions = new chrome.Options();
@@ -28,7 +28,7 @@ async function testArtemisApp() {
   const isHeadless = process.env.HEADLESS === "true";
 
   if (isHeadless) {
-    console.log("🤖 Ejecutando en modo HEADLESS\n");
+    console.log("Ejecutando en modo HEADLESS\n");
     chromeOptions.addArguments("--headless=new"); // Usar el nuevo modo headless
     chromeOptions.addArguments("--no-sandbox"); // Necesario para CI/CD
     chromeOptions.addArguments("--disable-dev-shm-usage"); // Evita problemas de memoria en CI
@@ -36,7 +36,7 @@ async function testArtemisApp() {
     chromeOptions.addArguments("--window-size=1920,1080"); // Tamaño de ventana fijo
     chromeOptions.addArguments("--disable-blink-features=AutomationControlled"); // Evita detección
   } else {
-    console.log("🖥️  Ejecutando en modo NORMAL (con interfaz gráfica)\n");
+    console.log("Ejecutando en modo NORMAL (con interfaz gráfica)\n");
     chromeOptions.addArguments("--window-size=1920,1080");
   }
 
@@ -57,8 +57,8 @@ async function testArtemisApp() {
     await driver.sleep(3000); // Aumentado para CI
 
     const title = await driver.getTitle();
-    console.log(`    ✓ Título: "${title}"`);
-    console.log("    ✓ Página cargada correctamente\n");
+    console.log(`     Título: "${title}"`);
+    console.log("     Página cargada correctamente\n");
 
     // TEST 2: Verificar que el sidebar está visible
     console.log("TEST 2: Verificando sidebar...");
@@ -66,25 +66,25 @@ async function testArtemisApp() {
     const sidebar = await driver.findElement(By.css('[class*="MuiDrawer"]'));
     const isSidebarVisible = await sidebar.isDisplayed();
     if (isSidebarVisible) {
-      console.log("    ✓ Sidebar visible\n");
+      console.log("     Sidebar visible\n");
     } else {
       throw new Error("Sidebar NO visible");
     }
 
     // TEST 3: Verificar botones del sidebar
-    console.log("📝 TEST 3: Verificando botones del sidebar...");
+    console.log("TEST 3: Verificando botones del sidebar...");
 
     const helpButton = await driver.findElement(
       By.xpath("//button[contains(., 'Help')]")
     );
-    console.log('    ✓ Botón "Help" encontrado');
+    console.log('     Botón "Help" encontrado');
     const reportButton = await driver.findElement(
       By.xpath("//button[contains(., 'Report bug')]")
     );
-    console.log('    ✓ Botón "Report bug" encontrado\n');
+    console.log('     Botón "Report bug" encontrado\n');
 
     // TEST 4: Abrir diálogo de ayuda
-    console.log("📝 TEST 4: Abriendo diálogo de ayuda...");
+    console.log("TEST 4: Abriendo diálogo de ayuda...");
     await helpButton.click();
     await driver.sleep(1000);
     // Buscar el título del diálogo
@@ -93,18 +93,18 @@ async function testArtemisApp() {
     );
     const isDialogVisible = await dialogTitle.isDisplayed();
     if (isDialogVisible) {
-      console.log("    ✓ Diálogo de ayuda abierto correctamente");
+      console.log("     Diálogo de ayuda abierto correctamente");
       // Cerrar el diálogo
       const closeButton = await driver.findElement(
         By.xpath("//button[contains(., 'CLOSE')]")
       );
       await closeButton.click();
       await driver.sleep(500);
-      console.log("    ✓ Diálogo cerrado correctamente\n");
+      console.log("     Diálogo cerrado correctamente\n");
     }
 
     // TEST 5: Navegar usando los botones del sidebar
-    console.log("📝 TEST 5: Navegando por la aplicación...");
+    console.log("TEST 5: Navegando por la aplicación...");
     const sidebarButtons = await driver.findElements(
       By.css('[class*="MuiButton-root"]')
     );
@@ -114,7 +114,7 @@ async function testArtemisApp() {
         await sidebarButtons[2].click();
         await driver.sleep(1000);
         const newUrl = await driver.getCurrentUrl();
-        console.log(`    ✓ Navegado a: ${newUrl}\n`);
+        console.log(`     Navegado a: ${newUrl}\n`);
       }
     }
 
@@ -123,7 +123,7 @@ async function testArtemisApp() {
     await driver.navigate().back();
     await driver.sleep(500);
     const backUrl = await driver.getCurrentUrl();
-    console.log(`    ✓ URL después de volver: ${backUrl}\n`);
+    console.log(`     URL después de volver: ${backUrl}\n`);
 
     // TEST 7: Navegar a todas las páginas
     console.log("TEST 7: Navegando a todas las páginas...");
@@ -131,14 +131,14 @@ async function testArtemisApp() {
     // HomePage (ya estamos aquí)
     await driver.get("http://localhost:5173/?bypass_auth=true");
     await driver.sleep(1000);
-    console.log("    ✓ HomePage cargada");
+    console.log("     HomePage cargada");
 
     // Community
     await driver.get("http://localhost:5173/community?bypass_auth=true");
     await driver.sleep(1000);
     let pageUrl = await driver.getCurrentUrl();
     if (pageUrl.includes("/community")) {
-      console.log("    ✓ Community cargada");
+      console.log("     Community cargada");
     }
 
     // Gallery
@@ -146,7 +146,7 @@ async function testArtemisApp() {
     await driver.sleep(1000);
     pageUrl = await driver.getCurrentUrl();
     if (pageUrl.includes("/gallery")) {
-      console.log("    ✓ Gallery cargada");
+      console.log("     Gallery cargada");
     }
 
     // Edit User
@@ -154,7 +154,7 @@ async function testArtemisApp() {
     await driver.sleep(1000);
     pageUrl = await driver.getCurrentUrl();
     if (pageUrl.includes("/edit-user")) {
-      console.log("    ✓ Edit User cargada");
+      console.log("     Edit User cargada");
     }
 
     // Astronomical Events
@@ -162,7 +162,7 @@ async function testArtemisApp() {
     await driver.sleep(1000);
     pageUrl = await driver.getCurrentUrl();
     if (pageUrl.includes("/astro-events")) {
-      console.log("    ✓ Astronomical Events cargada\n");
+      console.log("     Astronomical Events cargada\n");
     }
 
     // TEST 8: Probar ConfigMenu en HomePage
@@ -176,12 +176,12 @@ async function testArtemisApp() {
     const configButton = await driver.findElement(
       By.css('button[aria-label="Abrir configuración"]')
     );
-    console.log("    ✓ Botón de configuración encontrado");
+    console.log("     Botón de configuración encontrado");
 
     // Click para abrir el menú
     await configButton.click();
     await driver.sleep(1000); // Aumentar tiempo de espera
-    console.log("    ✓ ConfigMenu abierto");
+    console.log("     ConfigMenu abierto");
 
     // Verificar que los campos están presentes usando selectores más específicos
     const dateInput = await driver.findElement(By.css('input[type="date"]'));
@@ -191,7 +191,7 @@ async function testArtemisApp() {
     );
     const latInput = numberInputs[0];
     const lngInput = numberInputs[1];
-    console.log("    ✓ Todos los campos de configuración encontrados");
+    console.log("     Todos los campos de configuración encontrados");
 
     // Modificar valores
     await dateInput.clear();
@@ -202,7 +202,7 @@ async function testArtemisApp() {
     await latInput.sendKeys("40.4168");
     await lngInput.clear();
     await lngInput.sendKeys("-3.7038");
-    console.log("    ✓ Valores modificados");
+    console.log("     Valores modificados");
 
     // Click en Guardar
     const saveButton = await driver.findElement(
@@ -210,14 +210,14 @@ async function testArtemisApp() {
     );
     await saveButton.click();
     await driver.sleep(500);
-    console.log("    ✓ Configuración guardada");
+    console.log("     Configuración guardada");
 
     // Verificar que el menú se cerró
     const configMenusAfter = await driver.findElements(
       By.css('input[type="date"]')
     );
     if (configMenusAfter.length === 0) {
-      console.log("    ✓ ConfigMenu cerrado correctamente");
+      console.log("     ConfigMenu cerrado correctamente");
     }
 
     // Reabrir y probar botón Cancelar
@@ -228,7 +228,7 @@ async function testArtemisApp() {
     );
     await cancelButton.click();
     await driver.sleep(500);
-    console.log("    ✓ Botón Cancelar funciona correctamente\n");
+    console.log("     Botón Cancelar funciona correctamente\n");
 
     // TEST 9: Verificar flujo de subida de imágenes en Gallery
     console.log("TEST 9: Verificando flujo de subida de imágenes...");
@@ -242,19 +242,19 @@ async function testArtemisApp() {
       By.xpath("//*[contains(text(), 'My Gallery')]")
     );
     if (await galleryTitle.isDisplayed()) {
-      console.log("    ✓ Página Gallery cargada correctamente");
+      console.log("     Página Gallery cargada correctamente");
     }
 
     // Buscar el botón de añadir imagen (botón flotante con +)
     const addImageButton = await driver.findElement(
       By.css('button[aria-label="add"]')
     );
-    console.log('    ✓ Botón "Añadir imagen" encontrado');
+    console.log('     Botón "Añadir imagen" encontrado');
 
     // Click para abrir el diálogo
     await addImageButton.click();
     await driver.sleep(1000);
-    console.log("    ✓ Diálogo de subida de imagen abierto");
+    console.log("     Diálogo de subida de imagen abierto");
 
     // Verificar que los campos del formulario están presentes
     try {
@@ -262,21 +262,21 @@ async function testArtemisApp() {
       const titleLabel = await driver.findElement(
         By.xpath("//*[contains(text(), 'Image title')]")
       );
-      console.log('    ✓ Campo "Título" encontrado');
+      console.log('     Campo "Título" encontrado');
 
       // Buscar campo de descripción
       const descLabel = await driver.findElement(
         By.xpath("//*[contains(text(), 'Image description')]")
       );
-      console.log('    ✓ Campo "Descripción" encontrado');
+      console.log('     Campo "Descripción" encontrado');
 
       // Verificar que hay un botón de selección de archivo
       const chooseButton = await driver.findElement(
         By.xpath("//button[contains(., 'Choose Image')]")
       );
-      console.log("    ✓ Botón de selección de archivo encontrado");
+      console.log("     Botón de selección de archivo encontrado");
 
-      console.log("    ✓ Todos los campos del formulario verificados");
+      console.log("     Todos los campos del formulario verificados");
     } catch (e) {
       console.log("    ℹ Algunos campos del formulario no fueron encontrados");
     }
@@ -288,42 +288,42 @@ async function testArtemisApp() {
       );
       await cancelButton.click();
       await driver.sleep(500);
-      console.log("    ✓ Diálogo cerrado correctamente");
+      console.log("     Diálogo cerrado correctamente");
     } catch (e) {
       // Intentar cerrar con el botón X o ESC
       await driver.actions().sendKeys("\uE00C").perform(); // ESC key
       await driver.sleep(500);
-      console.log("    ✓ Diálogo cerrado con ESC");
+      console.log("     Diálogo cerrado con ESC");
     }
 
-    console.log("    ✓ Flujo de subida de imágenes verificado\n");
+    console.log("     Flujo de subida de imágenes verificado\n");
 
     // ========================================
     // RESUMEN FINAL
     // ========================================
     console.log("═".repeat(50));
-    console.log("✅ TODOS LOS TESTS PASARON EXITOSAMENTE");
+    console.log("TODOS LOS TESTS PASARON EXITOSAMENTE");
     console.log("═".repeat(50));
-    console.log("\n📊 Resumen:");
-    console.log("   • Tests de login: 4/4 ✅");
-    console.log("   • Tests de aplicación: 6/6 ✅");
-    console.log("   • Total: 10/10 ✅\n");
+    console.log("\ Resumen:");
+    console.log("   • Tests de login: 4/4");
+    console.log("   • Tests de aplicación: 6/6");
+    console.log("   • Total: 10/10\n");
 
     process.exit(0); // Exit con código 0 para indicar éxito
   } catch (error) {
-    console.error("\n❌ ERROR EN LOS TESTS:", error.message);
+    console.error("\nERROR EN LOS TESTS:", error.message);
     console.error("Stack:", error.stack);
     process.exit(1); // Exit con código 1 para indicar fallo
   } finally {
     // Cerrar el navegador
-    console.log("\n🔒 Cerrando navegador...");
+    console.log("\nCerrando navegador...");
     await driver.quit();
-    console.log("✓ Navegador cerrado\n");
+    console.log("Navegador cerrado\n");
   }
 }
 
 // Mensaje inicial
-console.log("⚠️  REQUISITOS PREVIOS:");
+console.log(" REQUISITOS PREVIOS:");
 console.log("   1. Frontend corriendo en http://localhost:5173");
 console.log("   2. Backend corriendo en http://localhost:5000");
 console.log("   3. Usuario de prueba creado en la base de datos");
